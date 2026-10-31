@@ -1,0 +1,8 @@
+id: Q-002
+type: question
+asks_for: [BHV-001.error_cases]
+blocking: true
+to: "注文チーム"
+context: "該当なしの場合の挙動が、詳細設計書（空の一覧を返す）と実装（E-404 を返す）で食い違っている。他の情報源に記載なし"
+options: ["空の一覧を返す（設計書どおり。実装を直す）", "E-404 を返す（実装どおり。設計書を直す）"]
+status: open

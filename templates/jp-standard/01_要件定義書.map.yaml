@@ -1,0 +1,320 @@
+# 要件定義書 の対応表（build.py が spec.yaml から生成。直接編集しないこと）
+document: 要件定義書
+sheets:
+- template: 表紙
+  cells:
+    B8:
+      expr: project
+      label: システム名
+    C12:
+      expr: =要件定義書
+      label: 文書名
+    C13:
+      expr: '='
+      label: 版数
+    C14:
+      expr: today
+      label: 作成日
+    C15:
+      expr: =Canon（検証済みの正解情報）から canon render で生成
+      label: 生成元
+    C16:
+      expr: stat.confirmed_rate
+      label: 確定率
+    C17:
+      expr: stat.open_questions
+      label: 未回答の質問
+- template: 改訂履歴
+  cells:
+    B3:
+      expr: project
+      label: システム名
+    A6:
+      expr: '='
+      label: 版数
+    B6:
+      expr: today
+      label: 改訂日
+    C6:
+      expr: =Canon から canon render で生成
+      label: 改訂内容
+    D6:
+      expr: =canon
+      label: 改訂者
+- template: 1.はじめに
+  cells:
+    B3:
+      expr: project
+      label: システム名
+    B5:
+      expr: gap=プロジェクトの目的・背景
+      label: 目的・背景
+    B6:
+      expr: config.scope
+      label: 対象範囲
+    B7:
+      expr: gap=対象外事項
+      label: 対象外事項
+    B8:
+      expr: gap=プロジェクトの前提条件
+      label: 前提条件
+    B9:
+      expr: gap=関係者と役割
+      label: 関係者・体制
+- template: 2.業務要件
+  cells:
+    B3:
+      expr: project
+      label: システム名
+    B5:
+      expr: gap=業務フロー
+      label: 現行業務フロー（As-Is）
+    B6:
+      expr: gap=業務フロー
+      label: 新業務フロー（To-Be）
+    B7:
+      expr: gap=業務課題
+      label: 業務上の課題と解決方針
+- template: 3.1 機能要件
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: req
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 要件ID
+    B:
+      expr: name
+      label: 要件名
+    C:
+      expr: fields.statement
+      label: 要件内容
+    D:
+      expr: fields.acceptance_criteria
+      label: 受入条件
+    E:
+      expr: fields.priority
+      label: 優先度
+    F:
+      expr: fields.actor
+      label: 利用者
+    G:
+      expr: fields.rationale
+      label: 理由
+    H:
+      expr: inbound.derived_from
+      label: 実現する機能
+  where:
+    fields.kind:
+    - functional
+- template: 3.2 画面一覧
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: scr
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 画面ID
+    B:
+      expr: name
+      label: 画面名
+    C:
+      expr: fields.purpose
+      label: 目的
+    D:
+      expr: fields.actor
+      label: 利用者
+    E:
+      expr: links.derived_from
+      label: 関連要件
+- template: 3.3 帳票一覧
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: rpt
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 帳票ID
+    B:
+      expr: name
+      label: 帳票名
+    C:
+      expr: fields.purpose
+      label: 目的
+    D:
+      expr: fields.trigger
+      label: 出力契機
+    E:
+      expr: fields.format
+      label: 出力先・形式
+- template: 3.4 外部連携一覧
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: ifc
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 連携ID
+    B:
+      expr: name
+      label: 連携名
+    C:
+      expr: fields.counterpart
+      label: 連携先
+    D:
+      expr: fields.direction
+      label: 方向
+    E:
+      expr: fields.method
+      label: 方式
+    F:
+      expr: fields.failure_handling
+      label: 異常時の動作
+- template: 4.データ要件
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: dat
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: データID
+    B:
+      expr: name
+      label: データ名
+    C:
+      expr: fields.summary
+      label: 概要
+    D:
+      expr: fields.volume
+      label: 件数見込み
+    E:
+      expr: fields.frequency
+      label: 更新頻度
+    F:
+      expr: fields.retention
+      label: 保存期間
+    G:
+      expr: fields.migration
+      label: 移行要否
+- template: 5.非機能要件
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: req
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 要件ID
+    B:
+      expr: fields.nfr_category
+      label: 分類（非機能要求グレード）
+    C:
+      expr: name
+      label: 要件名
+    D:
+      expr: fields.statement
+      label: 要件内容
+    E:
+      expr: fields.acceptance_criteria
+      label: 目標値・受入条件
+    F:
+      expr: fields.rationale
+      label: 理由
+  where:
+    fields.kind:
+    - non_functional
+- template: 6.制約条件
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: req
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 要件ID
+    B:
+      expr: name
+      label: 制約名
+    C:
+      expr: fields.statement
+      label: 内容
+    D:
+      expr: fields.rationale
+      label: 理由
+  where:
+    fields.kind:
+    - constraint
+- template: 7.用語集
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: term
+  start: 6
+  columns:
+    A:
+      expr: name
+      label: 用語
+    B:
+      expr: fields.definition
+      label: 定義
+    C:
+      expr: fields.aliases
+      label: 別名・略称
+- template: 課題管理表
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: questions
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 質問ID
+    B:
+      expr: blocking
+      label: 区分
+    C:
+      expr: to
+      label: 宛先
+    D:
+      expr: asks_for
+      label: 対象項目
+    E:
+      expr: context
+      label: 内容
+    F:
+      expr: options
+      label: 回答候補
+    G:
+      expr: status
+      label: 状態
+    H:
+      expr: answer.value
+      label: 回答
+    I:
+      expr: answer.by
+      label: 回答者
+    J:
+      expr: answer.at
+      label: 回答日

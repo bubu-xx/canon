@@ -1,0 +1,78 @@
+# 振る舞い（BHV）：システムが「どう」動くか。詳細設計の中心。
+type: bhv
+id_prefix: BHV
+version: 0
+label: 振る舞い
+fields:
+  summary:
+    label: "概要"
+    type: text
+    required: true
+    blocking: true
+    description: "この振る舞いが何をするか"
+  trigger:
+    label: "きっかけ"
+    type: text
+    required: true
+    blocking: true
+    description: "何をきっかけに始まるか（画面操作、API 呼び出し、バッチ起動など）"
+  inputs:
+    label: "入力"
+    type: list
+    required: true
+    blocking: true
+    description: "入力項目と、その型・必須・制約"
+  preconditions:
+    label: "前提条件"
+    type: list
+    required: true
+    blocking: false
+    description: "開始時に成り立っているべき条件"
+  processing:
+    label: "処理"
+    type: list
+    required: true
+    blocking: true
+    description: "処理の手順"
+  outputs:
+    label: "出力"
+    type: list
+    required: true
+    blocking: true
+    description: "出力・応答の内容"
+  error_cases:
+    label: "エラー時の挙動"
+    type: list
+    required: true
+    blocking: true
+    description: "エラー条件と、そのときの挙動（エラーコード、状態を変えるか）"
+  state_changes:
+    label: "状態の変化"
+    type: list
+    required: true
+    blocking: false
+    description: "データや状態をどう変えるか"
+  authorization:
+    label: "実行できる人"
+    type: text
+    required: true
+    blocking: false
+    description: "誰が実行できるか"
+  timeout:
+    label: "タイムアウト"
+    type: number
+    units: [ms, s, min]
+    required: false
+    blocking: false
+    description: "外部呼び出しや処理全体の上限時間"
+  idempotency:
+    label: "冪等性"
+    type: enum
+    values: [idempotent, not_idempotent]
+    required: false
+    blocking: false
+    description: "同じ要求を繰り返したときに結果が変わらないか"
+links:
+  required:
+    derived_from: { min: 1, target_types: [req] }
+    verified_by:  { min: 1, target_types: [tst] }

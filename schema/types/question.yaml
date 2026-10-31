@@ -1,0 +1,27 @@
+# 質問（Q）：空白（unknown）・矛盾（conflict）を埋めるために人へ聞くこと。
+# 質問は Canon の値ではないので、フィールドの共通の形には従わない。
+type: question
+id_prefix: Q
+version: 0
+label: 質問
+required: [id, type, asks_for, blocking, status, context]
+properties:
+  asks_for:
+    type: list
+    description: "この質問で埋まる空白。'要素ID.フィールド名' の形。複数可"
+  blocking:
+    type: boolean
+    description: "asks_for のどれかが着手条件（blocking）なら true"
+  to:
+    type: string
+    description: "誰に聞くべきか"
+  context:
+    type: text
+    description: "なぜ聞くのか。再探索しても見つからなかった経緯や、関連する情報源"
+  options:
+    type: list
+    description: "回答の候補。既定値ではない"
+  status:
+    enum: [open, answered, withdrawn]
+  answer:
+    description: "回答。{value, by, at, action}。action は none / fix_code（実装を直す課題を起票）/ fix_doc（設計書が古い。再生成で直る）。回答後はこれが answer 出典として各フィールドに反映される"

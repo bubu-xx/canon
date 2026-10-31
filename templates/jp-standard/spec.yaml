@@ -1,0 +1,365 @@
+# 日本の SI 現場で一般的な設計書・試験仕様書 6 種の構成。
+# build.py がこれを読み、各文書の Excel テンプレート（*.xlsx）と対応表（*.map.yaml）を作る。
+#
+# 構成の根拠：
+#   要件定義書 … 業務要件／機能要件（機能・画面・帳票・外部連携）／データ要件／非機能要件（IPA 非機能要求グレード6分類）／制約／用語
+#   基本設計書 … 外部設計（What）。機能一覧・画面・帳票・データ（論理）・外部IF・方式・セキュリティ
+#   詳細設計書 … 内部設計（How）。処理ごとの入出力・ロジック・エラー処理、モジュール、データ（物理）
+#   試験仕様書 … V字の対：詳細設計↔単体、基本設計↔結合、要件定義↔総合
+#
+# 項目の式（canon render の対応表と同じ）：
+#   id / name / fields.<項目> / links.<種別> / inbound.<種別> / project / today / config.scope / stat.<…>
+#   "=固定文字列"（空の "=" は人が記入する欄）
+#   "gap=<説明>" … Canon にこの情報の置き場が無いことを明示する
+# 型や項目が Canon のスキーマに無い式は、出力時に「型が無い」「項目が無い」として不足一覧に出る。
+
+documents:
+
+  - file: 01_要件定義書
+    title: 要件定義書
+    sheets:
+      - kind: cover
+      - kind: history
+      - kind: form
+        name: 1.はじめに
+        items:
+          - [目的・背景, "gap=プロジェクトの目的・背景"]
+          - [対象範囲, config.scope]
+          - [対象外事項, "gap=対象外事項"]
+          - [前提条件, "gap=プロジェクトの前提条件"]
+          - [関係者・体制, "gap=関係者と役割"]
+      - kind: form
+        name: 2.業務要件
+        items:
+          - [現行業務フロー（As-Is）, "gap=業務フロー"]
+          - [新業務フロー（To-Be）, "gap=業務フロー"]
+          - [業務上の課題と解決方針, "gap=業務課題"]
+      - kind: table
+        name: 3.1 機能要件
+        rows: req
+        where: {fields.kind: [functional]}
+        columns:
+          - [要件ID, id, 10]
+          - [要件名, name, 22]
+          - [要件内容, fields.statement, 40]
+          - [受入条件, fields.acceptance_criteria, 40]
+          - [優先度, fields.priority, 10]
+          - [利用者, fields.actor, 12]
+          - [理由, fields.rationale, 30]
+          - [実現する機能, inbound.derived_from, 26]
+      - kind: table
+        name: 3.2 画面一覧
+        rows: scr
+        columns:
+          - [画面ID, id, 10]
+          - [画面名, name, 22]
+          - [目的, fields.purpose, 40]
+          - [利用者, fields.actor, 14]
+          - [関連要件, links.derived_from, 26]
+      - kind: table
+        name: 3.3 帳票一覧
+        rows: rpt
+        columns:
+          - [帳票ID, id, 10]
+          - [帳票名, name, 22]
+          - [目的, fields.purpose, 40]
+          - [出力契機, fields.trigger, 24]
+          - [出力先・形式, fields.format, 20]
+      - kind: table
+        name: 3.4 外部連携一覧
+        rows: ifc
+        columns:
+          - [連携ID, id, 10]
+          - [連携名, name, 22]
+          - [連携先, fields.counterpart, 18]
+          - [方向, fields.direction, 10]
+          - [方式, fields.method, 18]
+          - [異常時の動作, fields.failure_handling, 36]
+      - kind: table
+        name: 4.データ要件
+        rows: dat
+        columns:
+          - [データID, id, 10]
+          - [データ名, name, 22]
+          - [概要, fields.summary, 36]
+          - [件数見込み, fields.volume, 14]
+          - [更新頻度, fields.frequency, 14]
+          - [保存期間, fields.retention, 14]
+          - [移行要否, fields.migration, 12]
+      - kind: table
+        name: 5.非機能要件
+        rows: req
+        where: {fields.kind: [non_functional]}
+        columns:
+          - [要件ID, id, 10]
+          - [分類（非機能要求グレード）, fields.nfr_category, 18]
+          - [要件名, name, 22]
+          - [要件内容, fields.statement, 40]
+          - [目標値・受入条件, fields.acceptance_criteria, 36]
+          - [理由, fields.rationale, 30]
+      - kind: table
+        name: 6.制約条件
+        rows: req
+        where: {fields.kind: [constraint]}
+        columns:
+          - [要件ID, id, 10]
+          - [制約名, name, 22]
+          - [内容, fields.statement, 48]
+          - [理由, fields.rationale, 36]
+      - kind: table
+        name: 7.用語集
+        rows: term
+        columns:
+          - [用語, name, 22]
+          - [定義, fields.definition, 60]
+          - [別名・略称, fields.aliases, 20]
+      - kind: questions
+
+  - file: 02_基本設計書
+    title: 基本設計書
+    sheets:
+      - kind: cover
+      - kind: history
+      - kind: form
+        name: 1.概要
+        items:
+          - [システムの概要, "gap=システム全体の概要"]
+          - [対象範囲, config.scope]
+          - [関連文書, "=要件定義書、詳細設計書"]
+      - kind: table
+        name: 2.機能一覧
+        rows: bhv
+        columns:
+          - [機能ID, id, 10]
+          - [機能名, name, 24]
+          - [概要, fields.summary, 40]
+          - [起動契機, fields.trigger, 24]
+          - [利用者・権限, fields.authorization, 18]
+          - [関連要件, links.derived_from, 26]
+      - kind: table
+        name: 3.画面設計
+        rows: scr
+        columns:
+          - [画面ID, id, 10]
+          - [画面名, name, 20]
+          - [目的, fields.purpose, 30]
+          - [画面項目, fields.items, 40]
+          - [操作・遷移, fields.transitions, 30]
+      - kind: table
+        name: 4.帳票設計
+        rows: rpt
+        columns:
+          - [帳票ID, id, 10]
+          - [帳票名, name, 20]
+          - [出力項目, fields.items, 40]
+          - [出力契機, fields.trigger, 24]
+      - kind: table
+        name: 5.データ設計（論理）
+        rows: dat
+        columns:
+          - [データID, id, 10]
+          - [エンティティ名, name, 20]
+          - [概要, fields.summary, 30]
+          - [属性, fields.attributes, 44]
+          - [関連, links.uses, 20]
+      - kind: table
+        name: 6.外部インタフェース設計
+        rows: ifc
+        columns:
+          - [IF ID, id, 10]
+          - [IF名, name, 20]
+          - [連携先, fields.counterpart, 16]
+          - [方式・プロトコル, fields.method, 18]
+          - [送受信項目, fields.items, 36]
+          - [タイムアウト・再試行, fields.timeout, 16]
+          - [異常時の動作, fields.failure_handling, 30]
+      - kind: table
+        name: 7.方式設計
+        rows: cmp
+        columns:
+          - [構成要素ID, id, 10]
+          - [構成要素名, name, 20]
+          - [責務, fields.responsibility, 36]
+          - [技術・製品, fields.technology, 20]
+          - [配置・環境, fields.deployment, 20]
+          - [依存先, links.uses, 20]
+      - kind: table
+        name: 8.設計判断
+        rows: adr
+        columns:
+          - [判断ID, id, 10]
+          - [判断事項, name, 22]
+          - [決定内容, fields.decision, 36]
+          - [理由, fields.rationale, 36]
+          - [却下した案, fields.alternatives, 30]
+      - kind: table
+        name: 9.セキュリティ設計
+        rows: req
+        where: {fields.nfr_category: [security]}
+        columns:
+          - [要件ID, id, 10]
+          - [要件名, name, 22]
+          - [内容, fields.statement, 40]
+          - [対策, "gap=セキュリティ対策の設計", 40]
+      - kind: questions
+
+  - file: 03_詳細設計書
+    title: 詳細設計書
+    sheets:
+      - kind: cover
+      - kind: history
+      - kind: table
+        name: 1.処理一覧
+        rows: bhv
+        columns:
+          - [処理ID, id, 10]
+          - [処理名, name, 28]
+          - [概要, fields.summary, 48]
+          - [関連要件, links.derived_from, 28]
+          - [単体試験, inbound.verifies, 28]
+      - kind: each
+        name: 処理仕様
+        each: bhv
+        items:
+          - [処理ID, id]
+          - [処理名, name]
+          - [関連要件, links.derived_from]
+          - [概要, fields.summary]
+          - [起動契機, fields.trigger]
+          - [前提条件, fields.preconditions]
+          - [入力, fields.inputs]
+          - [処理内容, fields.processing]
+          - [出力, fields.outputs]
+          - [事後条件, fields.postconditions]
+          - [エラー処理, fields.error_cases]
+          - [更新データ, fields.state_changes]
+          - [権限, fields.authorization]
+          - [タイムアウト, fields.timeout]
+          - [冪等性, fields.idempotency]
+          - [実装モジュール, links.realized_by]
+          - [使用データ, links.uses]
+          - [単体試験, inbound.verifies]
+      - kind: table
+        name: 2.モジュール設計
+        rows: cmp
+        columns:
+          - [モジュールID, id, 10]
+          - [モジュール名, name, 22]
+          - [責務, fields.responsibility, 30]
+          - [公開インタフェース（関数・メソッド）, fields.interfaces, 44]
+          - [依存先, links.uses, 20]
+      - kind: table
+        name: 3.データ設計（物理）
+        rows: dat
+        columns:
+          - [データID, id, 10]
+          - [物理名, fields.physical_name, 18]
+          - [論理名, name, 18]
+          - [項目定義（項目・型・桁・必須・キー）, fields.attributes, 50]
+          - [インデックス・制約, fields.indexes, 24]
+      - kind: questions
+
+  - file: 04_単体試験仕様書
+    title: 単体試験仕様書
+    test: true
+    sheets:
+      - kind: cover
+      - kind: history
+      - kind: form
+        name: 1.試験概要
+        items:
+          - [目的, "=詳細設計書の各処理が仕様どおりに動作することを、モジュール単位で確認する"]
+          - [対象範囲, config.scope]
+          - [試験環境, "gap=試験環境"]
+          - [スタブ・ドライバ, "gap=スタブ・ドライバ"]
+          - [合否判定基準, "=すべての試験項目で期待結果と実施結果が一致すること"]
+      - kind: table
+        name: 2.試験項目
+        rows: tst
+        where: {fields.level: [unit, "(none)"]}
+        columns:
+          - [試験ID, id, 10]
+          - [対象処理, links.verifies, 22]
+          - [試験項目, name, 24]
+          - [観点区分（正常・異常・境界）, fields.viewpoint, 12]
+          - [確認内容, fields.objective, 30]
+          - [前提条件, fields.preconditions, 24]
+          - [手順, fields.steps, 30]
+          - [試験データ, fields.test_data, 20]
+          - [期待結果, fields.expected, 30]
+          - [テストコード, fields.executable_ref, 22]
+          - [実施結果, "=", 10]
+          - [実施日, "=", 10]
+          - [担当者, "=", 10]
+          - [備考, "=", 16]
+
+  - file: 05_結合試験仕様書
+    title: 結合試験仕様書
+    test: true
+    sheets:
+      - kind: cover
+      - kind: history
+      - kind: form
+        name: 1.試験概要
+        items:
+          - [目的, "=基本設計書のとおりに、モジュール間・外部インタフェース間でデータが正しく受け渡されることを確認する"]
+          - [対象範囲, config.scope]
+          - [結合の進め方, "gap=結合順序（トップダウン・ボトムアップ等）"]
+          - [試験環境, "gap=試験環境"]
+          - [合否判定基準, "=すべての試験項目で期待結果と実施結果が一致すること"]
+      - kind: table
+        name: 2.試験項目
+        rows: tst
+        where: {fields.level: [integration]}
+        columns:
+          - [試験ID, id, 10]
+          - [試験シナリオ, name, 26]
+          - [結合対象, links.verifies, 24]
+          - [受け渡すデータ, fields.interface_data, 24]
+          - [確認内容, fields.objective, 30]
+          - [前提条件, fields.preconditions, 24]
+          - [手順, fields.steps, 30]
+          - [期待結果, fields.expected, 30]
+          - [実施結果, "=", 10]
+          - [実施日, "=", 10]
+          - [担当者, "=", 10]
+          - [備考, "=", 16]
+
+  - file: 06_総合試験仕様書
+    title: 総合試験仕様書
+    test: true
+    sheets:
+      - kind: cover
+      - kind: history
+      - kind: form
+        name: 1.試験概要
+        items:
+          - [目的, "=要件定義書の機能要件・非機能要件を、システム全体として満たしていることを確認する"]
+          - [対象範囲, config.scope]
+          - [試験環境（本番相当）, "gap=試験環境"]
+          - [合否判定基準, "=すべての試験項目で期待結果と実施結果が一致し、未解決の重大な不具合が無いこと"]
+      - kind: table
+        name: 2.試験項目
+        rows: tst
+        where: {fields.level: [system]}
+        columns:
+          - [試験ID, id, 10]
+          - [試験種別（機能・性能・セキュリティ等）, fields.test_type, 16]
+          - [確認する要件, links.verifies, 26]
+          - [試験項目, name, 24]
+          - [確認内容, fields.objective, 30]
+          - [前提条件, fields.preconditions, 24]
+          - [手順, fields.steps, 30]
+          - [期待結果・合格基準, fields.expected, 30]
+          - [実施結果, "=", 10]
+          - [実施日, "=", 10]
+          - [担当者, "=", 10]
+          - [備考, "=", 16]
+      - kind: table
+        name: 3.要件カバレッジ
+        rows: req
+        columns:
+          - [要件ID, id, 10]
+          - [要件名, name, 26]
+          - [種類, fields.kind, 12]
+          - [検証する試験, inbound.verifies, 40]

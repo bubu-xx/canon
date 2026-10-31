@@ -1,0 +1,288 @@
+# 基本設計書 の対応表（build.py が spec.yaml から生成。直接編集しないこと）
+document: 基本設計書
+sheets:
+- template: 表紙
+  cells:
+    B8:
+      expr: project
+      label: システム名
+    C12:
+      expr: =基本設計書
+      label: 文書名
+    C13:
+      expr: '='
+      label: 版数
+    C14:
+      expr: today
+      label: 作成日
+    C15:
+      expr: =Canon（検証済みの正解情報）から canon render で生成
+      label: 生成元
+    C16:
+      expr: stat.confirmed_rate
+      label: 確定率
+    C17:
+      expr: stat.open_questions
+      label: 未回答の質問
+- template: 改訂履歴
+  cells:
+    B3:
+      expr: project
+      label: システム名
+    A6:
+      expr: '='
+      label: 版数
+    B6:
+      expr: today
+      label: 改訂日
+    C6:
+      expr: =Canon から canon render で生成
+      label: 改訂内容
+    D6:
+      expr: =canon
+      label: 改訂者
+- template: 1.概要
+  cells:
+    B3:
+      expr: project
+      label: システム名
+    B5:
+      expr: gap=システム全体の概要
+      label: システムの概要
+    B6:
+      expr: config.scope
+      label: 対象範囲
+    B7:
+      expr: =要件定義書、詳細設計書
+      label: 関連文書
+- template: 2.機能一覧
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: bhv
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 機能ID
+    B:
+      expr: name
+      label: 機能名
+    C:
+      expr: fields.summary
+      label: 概要
+    D:
+      expr: fields.trigger
+      label: 起動契機
+    E:
+      expr: fields.authorization
+      label: 利用者・権限
+    F:
+      expr: links.derived_from
+      label: 関連要件
+- template: 3.画面設計
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: scr
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 画面ID
+    B:
+      expr: name
+      label: 画面名
+    C:
+      expr: fields.purpose
+      label: 目的
+    D:
+      expr: fields.items
+      label: 画面項目
+    E:
+      expr: fields.transitions
+      label: 操作・遷移
+- template: 4.帳票設計
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: rpt
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 帳票ID
+    B:
+      expr: name
+      label: 帳票名
+    C:
+      expr: fields.items
+      label: 出力項目
+    D:
+      expr: fields.trigger
+      label: 出力契機
+- template: 5.データ設計（論理）
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: dat
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: データID
+    B:
+      expr: name
+      label: エンティティ名
+    C:
+      expr: fields.summary
+      label: 概要
+    D:
+      expr: fields.attributes
+      label: 属性
+    E:
+      expr: links.uses
+      label: 関連
+- template: 6.外部インタフェース設計
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: ifc
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: IF ID
+    B:
+      expr: name
+      label: IF名
+    C:
+      expr: fields.counterpart
+      label: 連携先
+    D:
+      expr: fields.method
+      label: 方式・プロトコル
+    E:
+      expr: fields.items
+      label: 送受信項目
+    F:
+      expr: fields.timeout
+      label: タイムアウト・再試行
+    G:
+      expr: fields.failure_handling
+      label: 異常時の動作
+- template: 7.方式設計
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: cmp
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 構成要素ID
+    B:
+      expr: name
+      label: 構成要素名
+    C:
+      expr: fields.responsibility
+      label: 責務
+    D:
+      expr: fields.technology
+      label: 技術・製品
+    E:
+      expr: fields.deployment
+      label: 配置・環境
+    F:
+      expr: links.uses
+      label: 依存先
+- template: 8.設計判断
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: adr
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 判断ID
+    B:
+      expr: name
+      label: 判断事項
+    C:
+      expr: fields.decision
+      label: 決定内容
+    D:
+      expr: fields.rationale
+      label: 理由
+    E:
+      expr: fields.alternatives
+      label: 却下した案
+- template: 9.セキュリティ設計
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: req
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 要件ID
+    B:
+      expr: name
+      label: 要件名
+    C:
+      expr: fields.statement
+      label: 内容
+    D:
+      expr: gap=セキュリティ対策の設計
+      label: 対策
+  where:
+    fields.nfr_category:
+    - security
+- template: 課題管理表
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: questions
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 質問ID
+    B:
+      expr: blocking
+      label: 区分
+    C:
+      expr: to
+      label: 宛先
+    D:
+      expr: asks_for
+      label: 対象項目
+    E:
+      expr: context
+      label: 内容
+    F:
+      expr: options
+      label: 回答候補
+    G:
+      expr: status
+      label: 状態
+    H:
+      expr: answer.value
+      label: 回答
+    I:
+      expr: answer.by
+      label: 回答者
+    J:
+      expr: answer.at
+      label: 回答日

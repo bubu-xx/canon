@@ -1,0 +1,211 @@
+# 詳細設計書 の対応表（build.py が spec.yaml から生成。直接編集しないこと）
+document: 詳細設計書
+sheets:
+- template: 表紙
+  cells:
+    B8:
+      expr: project
+      label: システム名
+    C12:
+      expr: =詳細設計書
+      label: 文書名
+    C13:
+      expr: '='
+      label: 版数
+    C14:
+      expr: today
+      label: 作成日
+    C15:
+      expr: =Canon（検証済みの正解情報）から canon render で生成
+      label: 生成元
+    C16:
+      expr: stat.confirmed_rate
+      label: 確定率
+    C17:
+      expr: stat.open_questions
+      label: 未回答の質問
+- template: 改訂履歴
+  cells:
+    B3:
+      expr: project
+      label: システム名
+    A6:
+      expr: '='
+      label: 版数
+    B6:
+      expr: today
+      label: 改訂日
+    C6:
+      expr: =Canon から canon render で生成
+      label: 改訂内容
+    D6:
+      expr: =canon
+      label: 改訂者
+- template: 1.処理一覧
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: bhv
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 処理ID
+    B:
+      expr: name
+      label: 処理名
+    C:
+      expr: fields.summary
+      label: 概要
+    D:
+      expr: links.derived_from
+      label: 関連要件
+    E:
+      expr: inbound.verifies
+      label: 単体試験
+- template: 処理仕様
+  each: bhv
+  name: '{id}'
+  cells:
+    B3:
+      expr: project
+      label: システム名
+    B5:
+      expr: id
+      label: 処理ID
+    B6:
+      expr: name
+      label: 処理名
+    B7:
+      expr: links.derived_from
+      label: 関連要件
+    B8:
+      expr: fields.summary
+      label: 概要
+    B9:
+      expr: fields.trigger
+      label: 起動契機
+    B10:
+      expr: fields.preconditions
+      label: 前提条件
+    B11:
+      expr: fields.inputs
+      label: 入力
+    B12:
+      expr: fields.processing
+      label: 処理内容
+    B13:
+      expr: fields.outputs
+      label: 出力
+    B14:
+      expr: fields.postconditions
+      label: 事後条件
+    B15:
+      expr: fields.error_cases
+      label: エラー処理
+    B16:
+      expr: fields.state_changes
+      label: 更新データ
+    B17:
+      expr: fields.authorization
+      label: 権限
+    B18:
+      expr: fields.timeout
+      label: タイムアウト
+    B19:
+      expr: fields.idempotency
+      label: 冪等性
+    B20:
+      expr: links.realized_by
+      label: 実装モジュール
+    B21:
+      expr: links.uses
+      label: 使用データ
+    B22:
+      expr: inbound.verifies
+      label: 単体試験
+- template: 2.モジュール設計
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: cmp
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: モジュールID
+    B:
+      expr: name
+      label: モジュール名
+    C:
+      expr: fields.responsibility
+      label: 責務
+    D:
+      expr: fields.interfaces
+      label: 公開インタフェース（関数・メソッド）
+    E:
+      expr: links.uses
+      label: 依存先
+- template: 3.データ設計（物理）
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: dat
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: データID
+    B:
+      expr: fields.physical_name
+      label: 物理名
+    C:
+      expr: name
+      label: 論理名
+    D:
+      expr: fields.attributes
+      label: 項目定義（項目・型・桁・必須・キー）
+    E:
+      expr: fields.indexes
+      label: インデックス・制約
+- template: 課題管理表
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: questions
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 質問ID
+    B:
+      expr: blocking
+      label: 区分
+    C:
+      expr: to
+      label: 宛先
+    D:
+      expr: asks_for
+      label: 対象項目
+    E:
+      expr: context
+      label: 内容
+    F:
+      expr: options
+      label: 回答候補
+    G:
+      expr: status
+      label: 状態
+    H:
+      expr: answer.value
+      label: 回答
+    I:
+      expr: answer.by
+      label: 回答者
+    J:
+      expr: answer.at
+      label: 回答日

@@ -1,0 +1,4 @@
+# 業務システム向け（既定）。標準スキーマをそのまま使う。
+profile: business
+label: 業務システム
+types: {}

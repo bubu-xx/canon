@@ -1,0 +1,14 @@
+{
+  "name": "bubu-xx",
+  "description": "bubu-xx の Claude Code プラグイン",
+  "owner": {
+    "name": "bubu-xx"
+  },
+  "plugins": [
+    {
+      "name": "canon",
+      "source": "./",
+      "description": "複数の情報源（設計書・コード・人の回答）を照合し、プロジェクトの検証済みの正解情報（Canon）を組み立てるハーネス"
+    }
+  ]
+}

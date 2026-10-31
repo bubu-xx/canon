@@ -1,0 +1,28 @@
+id: TST-001
+type: tst
+name: 注文履歴検索の期間制限
+fields:
+  objective:
+    value: "12か月より前の注文が検索結果に含まれないことを確認する"
+    status: confirmed
+    source: { kind: document, ref: "試験仕様書 v1.0 §3.1" }
+  level:
+    value: system
+    status: confirmed
+    source: { kind: document, ref: "試験仕様書 v1.0 §3" }
+  preconditions:
+    value: ["13か月前と11か月前の注文を持つ会員でログイン済み"]
+    status: confirmed
+    source: { kind: document, ref: "試験仕様書 v1.0 §3.1 前提" }
+  steps:
+    value: ["条件を指定せずに検索する"]
+    status: confirmed
+    source: { kind: document, ref: "試験仕様書 v1.0 §3.1 手順" }
+  expected:
+    value: ["11か月前の注文のみが表示される"]
+    status: confirmed
+    source: { kind: document, ref: "試験仕様書 v1.0 §3.1 期待結果" }
+links:
+  - type: verifies
+    target: BHV-001
+    source: { kind: document, ref: "試験仕様書 v1.0 §3.1" }

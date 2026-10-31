@@ -1,0 +1,36 @@
+# 処理仕様書_様式.xlsx への対応表（canon render --format xlsx --template ... --map ...）
+# 値の式: id / name / fields.<項目> / fields.<項目>.source / fields.<項目>.status / links.<種別> / inbound.<種別>
+#         project / profile（要素に属さないシート）/ "=固定文字列"
+sheets:
+  - template: 表紙
+    cells:
+      C6: project
+  - template: 処理仕様
+    each: bhv                 # 振る舞い1件につきシートを複製
+    name: "{id}"
+    cells:
+      C3: id
+      G3: name
+      C4: links.derived_from
+      C5: fields.trigger
+      C6: fields.preconditions
+      C7: fields.authorization
+      A10: fields.summary
+      A32: fields.outputs
+      A36: fields.error_cases
+      A41: fields.state_changes
+    lists:
+      - { from: fields.inputs, at: A14, rows: 6 }
+      - { from: fields.processing, at: A22, rows: 8 }
+  - template: 課題管理表
+    rows: questions
+    start: 3
+    columns:
+      A: id
+      B: blocking
+      C: asks_for
+      D: context
+      E: status
+      F: answer.value
+      G: answer.by
+      H: answer.at

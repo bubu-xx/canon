@@ -1,0 +1,17 @@
+# observe スキルの出力例（コードから観測した実装の状態）
+element: BHV-001
+commit: 0000000
+observed_at: "2026-10-31T20:00+09:00"
+complete: false
+fields:
+  processing:
+    value:
+      - "検索条件に会員IDと12か月以内の条件を加える"
+      - "注文日の降順で最大15件を取得する"
+    ref: "src/order/search.go:49-51"
+  error_cases:
+    value: ["該当なしの場合はエラー E-404 を返す"]
+    ref: "src/order/search.go:56"
+  timeout:
+    value: 10
+    ref: "src/order/search.go:36"

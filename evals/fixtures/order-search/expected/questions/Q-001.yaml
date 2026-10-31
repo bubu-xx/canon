@@ -1,0 +1,7 @@
+id: Q-001
+type: question
+asks_for: [REQ-001.rationale]
+blocking: false
+to: "業務担当"
+context: "注文履歴の検索がなぜ必要か（なぜ12か月か）が要件定義書・基本設計書のどこにも書かれていない"
+status: open

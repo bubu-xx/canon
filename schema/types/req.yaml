@@ -1,0 +1,49 @@
+# 要求（REQ）：システムが「何を」満たすべきか。なぜ必要かも含む。
+type: req
+id_prefix: REQ
+version: 0
+label: 要求
+fields:
+  statement:
+    label: "要求の内容"
+    type: text
+    required: true
+    blocking: true
+    description: "要求の内容。1要素＝1つの検証可能な要求"
+  kind:
+    label: "種類"
+    type: enum
+    values: [functional, non_functional, constraint]
+    required: true
+    blocking: true
+    description: "機能要求／非機能要求／制約"
+  acceptance_criteria:
+    label: "受入条件"
+    type: list
+    required: true
+    blocking: true
+    description: "満たしたと判定できる条件。これが無い要求は検証できない"
+  rationale:
+    label: "理由"
+    type: text
+    required: true
+    blocking: false
+    description: "なぜ必要か。判断に迷ったときの拠り所"
+  priority:
+    label: "優先度"
+    type: enum
+    values: [must, should, could]
+    required: true
+    blocking: false
+    description: "優先度"
+  actor:
+    label: "対象の利用者"
+    type: string
+    required: false
+    blocking: false
+    description: "誰のための要求か（利用者の種類）"
+links:
+  required: {}
+  # 要求は少なくとも1つの振る舞いから derived_from で参照されるべき（実現されていない要求の検出）
+  required_inbound:
+    derived_from: { min: 1, from_types: [bhv] }

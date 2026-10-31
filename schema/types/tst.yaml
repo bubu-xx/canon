@@ -1,0 +1,52 @@
+# 試験（TST）：何をどの条件で検証し、何を期待するか。
+type: tst
+id_prefix: TST
+version: 0
+label: 試験
+fields:
+  objective:
+    label: "目的"
+    type: text
+    required: true
+    blocking: true
+    description: "何を確かめる試験か"
+  level:
+    label: "試験の水準"
+    type: enum
+    values: [unit, integration, system, acceptance]
+    required: true
+    blocking: false
+    description: "試験の水準"
+  preconditions:
+    label: "前提"
+    type: list
+    required: true
+    blocking: true
+    description: "前提となるデータ・状態"
+  steps:
+    label: "手順"
+    type: list
+    required: true
+    blocking: true
+    description: "操作の手順"
+  expected:
+    label: "期待結果"
+    type: list
+    required: true
+    blocking: true
+    description: "期待される結果。曖昧な表現（『正しく動く』等）は不可"
+  test_data:
+    label: "試験データ"
+    type: list
+    required: false
+    blocking: false
+    description: "使う試験データ"
+  executable_ref:
+    label: "テストコードの位置"
+    type: string
+    required: false
+    blocking: false
+    description: "実行可能なテストコードの位置（あれば）"
+links:
+  required:
+    verifies: { min: 1, target_types: [bhv, req] }

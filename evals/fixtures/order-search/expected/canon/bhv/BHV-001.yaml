@@ -1,0 +1,56 @@
+id: BHV-001
+type: bhv
+name: 注文履歴の検索処理
+fields:
+  summary:
+    value: "条件に合う会員本人の注文を新しい順に返す"
+    status: confirmed
+    source: { kind: document, ref: "詳細設計書 v2.0 シート7 B3:F5" }
+  trigger:
+    value: "注文履歴画面の検索ボタン押下"
+    status: confirmed
+    source: { kind: document, ref: "詳細設計書 v2.0 シート7 B6" }
+  inputs:
+    value:
+      - "注文日From（任意、日付）"
+      - "注文日To（任意、日付）"
+      - "商品名（任意、文字列、部分一致、100文字以内）"
+    status: confirmed
+    source: { kind: document, ref: "詳細設計書 v2.0 シート7 B10:F14" }
+  preconditions:
+    value: ["ログイン済みであること"]
+    status: confirmed
+    source: { kind: document, ref: "詳細設計書 v2.0 シート7 B8" }
+  processing:
+    value:
+      - "検索条件に会員IDと12か月以内の条件を加える"
+      - "注文日の降順で取得する"
+    status: confirmed
+    source: { kind: document, ref: "詳細設計書 v2.0 シート7 B16:F18" }
+  outputs:
+    value: ["注文番号、注文日、商品名、合計金額の一覧"]
+    status: confirmed
+    source: { kind: document, ref: "詳細設計書 v2.0 シート7 B20:F24" }
+  error_cases:
+    status: conflict
+    claims:
+      - value: ["該当なしの場合は空の一覧を返す"]
+        source: { kind: document, ref: "詳細設計書 v2.0 シート7 B30" }
+      - value: ["該当なしの場合はエラー E-404 を返す"]
+        source: { kind: code, ref: "src/order/search.go:56" }
+    question: Q-002
+  state_changes:
+    value: []
+    status: confirmed
+    source: { kind: document, ref: "詳細設計書 v2.0 シート7 B32" }
+  authorization:
+    value: "会員本人のみ"
+    status: confirmed
+    source: { kind: document, ref: "基本設計書 v1.2 §5.1 権限表" }
+links:
+  - type: derived_from
+    target: REQ-001
+    source: { kind: document, ref: "基本設計書 v1.2 トレーサビリティ表" }
+  - type: verified_by
+    target: TST-001
+    source: { kind: document, ref: "基本設計書 v1.2 トレーサビリティ表" }

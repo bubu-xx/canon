@@ -1,0 +1,9 @@
+# ビルド成果物（配布用バイナリは bin/ にリリース時のみ配置）
+/tools/dist/
+*.exe~
+# エディタ・OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+/.work/

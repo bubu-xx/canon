@@ -1,0 +1,117 @@
+# 単体試験仕様書 の対応表（build.py が spec.yaml から生成。直接編集しないこと）
+document: 単体試験仕様書
+sheets:
+- template: 表紙
+  cells:
+    B8:
+      expr: project
+      label: システム名
+    C12:
+      expr: =単体試験仕様書
+      label: 文書名
+    C13:
+      expr: '='
+      label: 版数
+    C14:
+      expr: today
+      label: 作成日
+    C15:
+      expr: =Canon（検証済みの正解情報）から canon render で生成
+      label: 生成元
+    C16:
+      expr: stat.confirmed_rate
+      label: 確定率
+    C17:
+      expr: stat.open_questions
+      label: 未回答の質問
+- template: 改訂履歴
+  cells:
+    B3:
+      expr: project
+      label: システム名
+    A6:
+      expr: '='
+      label: 版数
+    B6:
+      expr: today
+      label: 改訂日
+    C6:
+      expr: =Canon から canon render で生成
+      label: 改訂内容
+    D6:
+      expr: =canon
+      label: 改訂者
+- template: 1.試験概要
+  cells:
+    B3:
+      expr: project
+      label: システム名
+    B5:
+      expr: =詳細設計書の各処理が仕様どおりに動作することを、モジュール単位で確認する
+      label: 目的
+    B6:
+      expr: config.scope
+      label: 対象範囲
+    B7:
+      expr: gap=試験環境
+      label: 試験環境
+    B8:
+      expr: gap=スタブ・ドライバ
+      label: スタブ・ドライバ
+    B9:
+      expr: =すべての試験項目で期待結果と実施結果が一致すること
+      label: 合否判定基準
+- template: 2.試験項目
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: tst
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 試験ID
+    B:
+      expr: links.verifies
+      label: 対象処理
+    C:
+      expr: name
+      label: 試験項目
+    D:
+      expr: fields.viewpoint
+      label: 観点区分（正常・異常・境界）
+    E:
+      expr: fields.objective
+      label: 確認内容
+    F:
+      expr: fields.preconditions
+      label: 前提条件
+    G:
+      expr: fields.steps
+      label: 手順
+    H:
+      expr: fields.test_data
+      label: 試験データ
+    I:
+      expr: fields.expected
+      label: 期待結果
+    J:
+      expr: fields.executable_ref
+      label: テストコード
+    K:
+      expr: '='
+      label: 実施結果
+    L:
+      expr: '='
+      label: 実施日
+    M:
+      expr: '='
+      label: 担当者
+    N:
+      expr: '='
+      label: 備考
+  where:
+    fields.level:
+    - unit
+    - (none)

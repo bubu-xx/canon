@@ -1,0 +1,20 @@
+# ライブラリ・デスクトップアプリ向け。
+# 利用者の権限や業務上の前提が無い API・関数が中心なので、業務システム向けの項目を必須から外し、
+# 試験は実行可能なテストコードとの対応を必須にする。
+profile: library
+label: ライブラリ・デスクトップアプリ
+types:
+  req:
+    fields:
+      priority:      { required: false, blocking: false }
+  bhv:
+    fields:
+      trigger:       { required: false, blocking: false }
+      preconditions: { required: false, blocking: false }
+      state_changes: { required: false, blocking: false }
+      authorization: { required: false, blocking: false }
+  tst:
+    fields:
+      level:          { required: false, blocking: false }
+      preconditions:  { required: false, blocking: false }
+      executable_ref: { required: true, blocking: false }

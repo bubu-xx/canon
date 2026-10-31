@@ -1,0 +1,25 @@
+id: REQ-001
+type: req
+name: 注文履歴の検索
+fields:
+  statement:
+    value: "会員は過去12か月の自分の注文履歴を検索できる"
+    status: confirmed
+    source: { kind: document, ref: "要件定義書 v1.3 §4.2" }
+  kind:
+    value: functional
+    status: confirmed
+    source: { kind: document, ref: "要件定義書 v1.3 §4" }
+  acceptance_criteria:
+    value:
+      - "注文日・商品名で絞り込める"
+      - "12か月より前の注文は表示されない"
+    status: confirmed
+    source: { kind: document, ref: "要件定義書 v1.3 §4.2.1" }
+  rationale:
+    status: unknown
+    question: Q-001
+  priority:
+    value: must
+    status: confirmed
+    source: { kind: document, ref: "要件定義書 v1.3 §4.2" }

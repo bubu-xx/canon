@@ -1,0 +1,99 @@
+# Canon 標準スキーマ v0 — 共通定義
+# すべての型・フィールド・リンクが従う形。validate はこのファイルと types/ を読んで検査する。
+schema_version: 0
+
+# --- 要素（Element）の共通の形 -------------------------------------------
+element:
+  required: [id, type, name, fields]
+  properties:
+    id:      { type: string, description: "型ごとの接頭辞＋連番。例：REQ-001" }
+    type:    { type: string, description: "types/ に定義された型名" }
+    name:    { type: string, description: "人が識別するための短い名前（値ではないので出典不要）" }
+    owner:   { type: string, description: "質問の宛先を決めるための担当（任意）" }
+    version:
+      created: { type: string }
+      updated: { type: string }
+    fields:  { description: "型ごとのフィールド。各値は下の field の形に従う" }
+    links:   { description: "下の link の形のリスト" }
+
+id_prefix:
+  req: REQ
+  bhv: BHV
+  tst: TST
+  question: Q
+
+# --- フィールド（Field）の共通の形 ----------------------------------------
+# 出典と状態は要素単位ではなくフィールド単位で持つ。
+field:
+  status:
+    enum: [confirmed, unknown, conflict, not_applicable]
+    # 「たぶん」を表す状態は意図的に作らない
+    # not_applicable は「この項目はこの要素には当てはまらない」という判断。判断にも根拠（文書か人の回答）が要る
+  rules:
+    confirmed:
+      required: [value, source]
+      forbidden: [claims]
+    unknown:
+      required: [question]
+      forbidden: [value, claims]
+    conflict:
+      required: [claims, question]
+      forbidden: [value]
+      claims_min: 2          # 食い違う主張が2つ以上
+    not_applicable:
+      required: [source]     # document か answer。AI の判断だけでは該当なしにできない
+      forbidden: [value, claims]
+  properties:
+    value:    { description: "値。型はフィールド定義の type に従う" }
+    unit:     { description: "単位。フィールド定義で units が決まっていればその中から" }
+    status:   { description: "confirmed / unknown / conflict" }
+    source:   { description: "下の source の形" }
+    claims:   { description: "conflict のとき、各情報源の主張。各要素は {value, source}" }
+    question: { description: "unknown / conflict のとき、対応する質問の ID（Q-xxx）" }
+
+# --- 出典（Source）の形 ---------------------------------------------------
+source:
+  kind:
+    enum: [document, code, answer, derived]
+  kinds:
+    document:
+      required: [ref]
+      description: "情報源の文書。ref は 'ファイル名 版 節／シート・セル範囲' まで特定する"
+    code:
+      required: [ref]
+      optional: [commit]
+      description: "ソースコードの位置。ref は 'パス:行'"
+    answer:
+      required: [by, at, question]
+      description: "人の回答。誰が・いつ・どの質問に答えたか"
+    derived:
+      required: [from, rule]
+      description: "他のフィールドから機械的に計算できる値のみ。LLM の推論結果は入れない"
+  # 文書・コード・人の回答は同格の情報源。複数あれば突き合わせ、食い違えば conflict。
+  # 一方にしか無ければ、それを根拠に confirmed にしてよい（コードしか無い項目はコードが根拠）。
+
+# --- リンク（Link）の形 ---------------------------------------------------
+link:
+  required: [type, target, source]   # リンクも主張なので出典が要る
+  types:
+    derived_from: "上流の要素から派生している（BHV → REQ など）"
+    realized_by:  "構成・コードで実現されている"
+    verified_by:  "試験で検証される（BHV → TST など）"
+    verifies:     "試験が検証する対象（TST → BHV / REQ）"
+    uses:         "依存している"
+    decided_by:   "設計判断に基づく"
+    defines:      "用語の定義を適用している"
+
+# --- フィールド定義の書き方（types/*.yaml 用） ----------------------------
+field_definition:
+  properties:
+    type:        { enum: [text, string, integer, number, boolean, enum, list] }
+    values:      { description: "type が enum のときの選択肢" }
+    units:       { description: "許される単位の一覧（任意）" }
+    required:    { description: "true なら要素に必ず存在する（値が無くても unknown として存在する）" }
+    blocking:    { description: "true なら着手条件（必須）。unknown / conflict のままだと AI はこの要素の実装・修正に着手しない。false は注意" }
+
+# --- プロファイル（profiles/*.yaml） --------------------------------------
+# プロジェクトの種類ごとに、型の項目の required / blocking を上書きする。
+# 対象プロジェクトの .canon/config.yaml の profile で選ぶ（既定: business）。
+    description: { description: "このフィールドが何を表すか" }

@@ -1,0 +1,127 @@
+# 総合試験仕様書 の対応表（build.py が spec.yaml から生成。直接編集しないこと）
+document: 総合試験仕様書
+sheets:
+- template: 表紙
+  cells:
+    B8:
+      expr: project
+      label: システム名
+    C12:
+      expr: =総合試験仕様書
+      label: 文書名
+    C13:
+      expr: '='
+      label: 版数
+    C14:
+      expr: today
+      label: 作成日
+    C15:
+      expr: =Canon（検証済みの正解情報）から canon render で生成
+      label: 生成元
+    C16:
+      expr: stat.confirmed_rate
+      label: 確定率
+    C17:
+      expr: stat.open_questions
+      label: 未回答の質問
+- template: 改訂履歴
+  cells:
+    B3:
+      expr: project
+      label: システム名
+    A6:
+      expr: '='
+      label: 版数
+    B6:
+      expr: today
+      label: 改訂日
+    C6:
+      expr: =Canon から canon render で生成
+      label: 改訂内容
+    D6:
+      expr: =canon
+      label: 改訂者
+- template: 1.試験概要
+  cells:
+    B3:
+      expr: project
+      label: システム名
+    B5:
+      expr: =要件定義書の機能要件・非機能要件を、システム全体として満たしていることを確認する
+      label: 目的
+    B6:
+      expr: config.scope
+      label: 対象範囲
+    B7:
+      expr: gap=試験環境
+      label: 試験環境（本番相当）
+    B8:
+      expr: =すべての試験項目で期待結果と実施結果が一致し、未解決の重大な不具合が無いこと
+      label: 合否判定基準
+- template: 2.試験項目
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: tst
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 試験ID
+    B:
+      expr: fields.test_type
+      label: 試験種別（機能・性能・セキュリティ等）
+    C:
+      expr: links.verifies
+      label: 確認する要件
+    D:
+      expr: name
+      label: 試験項目
+    E:
+      expr: fields.objective
+      label: 確認内容
+    F:
+      expr: fields.preconditions
+      label: 前提条件
+    G:
+      expr: fields.steps
+      label: 手順
+    H:
+      expr: fields.expected
+      label: 期待結果・合格基準
+    I:
+      expr: '='
+      label: 実施結果
+    J:
+      expr: '='
+      label: 実施日
+    K:
+      expr: '='
+      label: 担当者
+    L:
+      expr: '='
+      label: 備考
+  where:
+    fields.level:
+    - system
+- template: 3.要件カバレッジ
+  cells:
+    B3:
+      expr: project
+      label: システム名
+  rows: req
+  start: 6
+  columns:
+    A:
+      expr: id
+      label: 要件ID
+    B:
+      expr: name
+      label: 要件名
+    C:
+      expr: fields.kind
+      label: 種類
+    D:
+      expr: inbound.verifies
+      label: 検証する試験
