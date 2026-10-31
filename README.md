@@ -36,6 +36,7 @@ claude --plugin-dir <このリポジトリのパス>
 | 1 | `/canon:canon-init` | 対象プロジェクトに `.canon/` を作る |
 | 2 | `/canon:sources` | 設計書などを出典の位置情報付きテキストにして `.canon/sources/` に置く（原文どおりかは人が確認） |
 | 3 | `/canon:ingest` | 情報源とコードから要素を抽出し、出典付きで Canon に取り込む |
+| 3b | `/canon:verify` | 情報源のすべての箇所を区切りごとにコードと照合し、矛盾・記述不足・未実装を洗い出す（一致・記述不足は別のエージェントが反例を探す） |
 | 4 | `/canon:ask` | 空白・矛盾の質問を整え、人の回答を Canon に取り込む |
 | 5 | `/canon:reconcile` | 情報源の新しい版を置いたときに突き合わせ直す |
 | 6 | `/canon:observe` | コードから実装を観測し、Canon とのズレを出す |
@@ -45,8 +46,8 @@ claude --plugin-dir <このリポジトリのパス>
 ## 構成
 | ディレクトリ | 役割 |
 |---|---|
-| `skills/` | 手順（canon-init / sources / ingest / reconcile / ask / observe / render / work） |
-| `agents/` | 抽出役（extractor）・書き込み役（reconciler）・質問役（questioner） |
+| `skills/` | 手順（canon-init / sources / ingest / verify / reconcile / ask / observe / render / work） |
+| `agents/` | 抽出役（extractor）・書き込み役（reconciler）・質問役（questioner）・反例探し役（refuter） |
 | `hooks/` | セッション開始時に原則と現状を伝える／Canon への書き込みを書く前に検査して止める／終了時に全体を検査する |
 | `.mcp.json` | MCP サーバー `canon`（query / impact / gaps / context_pack / validate）の登録 |
 | `tools/` | Go 製 CLI `canon`。検査ロジックはすべてここ |
@@ -60,6 +61,9 @@ canon init        対象プロジェクトに .canon/ を作る
 canon validate    Canon を規則に照らして検査する（違反があれば終了コード 1）
 canon gaps        空白・矛盾・リンク不足・未回答の質問を一覧にする（--blocking で必須のみ）
 canon drift       観測（実装）と Canon のズレを出す
+canon verify      箇所単位の照合（.canon/verify.yaml）の網羅と記録を検査する
+                  --init で情報源を機械的に区切った雛形を作る、--compare <file> で別の回と区切りごとに突き合わせる
+canon crosscheck  設計書の識別子と、同じ要素が出典にしているコードを機械的に突き合わせる
 canon render      Canon から人向け文書を生成する（--format xlsx で Excel、--template と --map で既存様式に流し込み）
 canon query       要素を検索する
 canon impact ID   要素を変えたときに見直しが要る要素を出す

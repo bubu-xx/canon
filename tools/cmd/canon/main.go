@@ -551,12 +551,38 @@ func cmdCrosscheck(args []string) int {
 func cmdVerify(args []string) int {
 	var c common
 	fs := flags("verify", &c)
+	initF := fs.Bool("init", false, "情報源から照合の雛形（.canon/verify.yaml）を作る")
+	force := fs.Bool("force", false, "--init で既存の verify.yaml を上書きする")
+	cmp := fs.String("compare", "", "別の照合の記録（verify.yaml）と区切りごとに突き合わせる")
 	if fs.Parse(args) != nil {
 		return 2
 	}
 	p, code := load(c)
 	if p == nil {
 		return code
+	}
+	if *initF {
+		na, nu, err := verify.Init(p, *force)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "canon:", err)
+			return 2
+		}
+		fmt.Printf("%s を作りました（箇所 %d、区切り %d）\n", verify.Path(p), na, nu)
+		return 0
+	}
+	if *cmp != "" {
+		a, err := verify.Load(verify.Path(p))
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "canon:", err)
+			return 2
+		}
+		b, err := verify.Load(*cmp)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "canon:", err)
+			return 2
+		}
+		fmt.Print(verify.Compare(p, a, b, "A", "B"))
+		return 0
 	}
 	r, err := verify.Check(p)
 	if err != nil {

@@ -1,12 +1,14 @@
 // Package verify は「箇所単位の照合」（.canon/verify.yaml）を検査する。
 //
-// 情報源のすべてのアンカーについて、記述を文の単位に分け、それぞれを実現しているコードの位置と
-// 判定（一致・不一致・未実装・照合不能）を記録する。この検査は記録の形と網羅を確かめる：
-//   - すべてのアンカーに照合の記録がある
+// 情報源のすべてのアンカーを、道具が機械的に作った区切り（unit）に分け、区切りごとに
+// 実現しているコードの位置と判定（一致・矛盾・記述不足・未実装・照合不能）を記録する。
+// この検査は記録の形と網羅を確かめる：
+//   - すべてのアンカーのすべての区切りに照合の記録がある（区切りの文面は書き換えない）
 //   - 判定が決められた値のどれか
 //   - コードの位置が実在する
-//   - 不一致・未実装には質問が付いている
+//   - 矛盾・未実装には質問が付いている
 //   - 範囲外・照合不能には理由がある
+//   - 一致・記述不足には、照合していない別のエージェントの反例探し（review）が済んでいる
 package verify
 
 import (
@@ -26,13 +28,16 @@ import (
 
 // Statement は1つの文の照合結果。
 type Statement struct {
-	Text     string   `yaml:"text" json:"text"`
-	Scope    string   `yaml:"scope" json:"scope"`     // in / out
-	Code     []string `yaml:"code" json:"code"`       // 実現しているコード（パス:行）
-	Verdict  string   `yaml:"verdict" json:"verdict"` // consistent / inconsistent / not_implemented / not_checkable
-	Note     string   `yaml:"note" json:"note"`
-	Question string   `yaml:"question" json:"question"`
-	Review   string   `yaml:"review" json:"review"` // 一致＋注記のとき、別のエージェントの見直し：kept / changed
+	Unit       int      `yaml:"unit" json:"unit"`     // 区切りの番号（canon verify --init が付ける。1 から）
+	Source     string   `yaml:"source" json:"source"` // 区切りの文面（書き換えない）
+	Text       string   `yaml:"text" json:"text"`
+	Scope      string   `yaml:"scope" json:"scope"`     // in / out
+	Code       []string `yaml:"code" json:"code"`       // 実現しているコード（パス:行）
+	Verdict    string   `yaml:"verdict" json:"verdict"` // consistent / inconsistent / not_implemented / not_checkable
+	Note       string   `yaml:"note" json:"note"`
+	Question   string   `yaml:"question" json:"question"`
+	Review     string   `yaml:"review" json:"review"`           // 一致・記述不足に対する別のエージェントの反例探し：kept / changed
+	ReviewNote string   `yaml:"review_note" json:"review_note"` // changed のとき、見つけた反例（入力・状態とコードの位置）
 }
 
 // Entry は1つのアンカーの照合結果。
@@ -59,8 +64,10 @@ type Report struct {
 	Statements int            `json:"statements"`
 	Verdicts   map[string]int `json:"verdicts"`
 	OutOfScope int            `json:"out_of_scope"`
+	Units      int            `json:"units"`
 	NeedReview int            `json:"need_review"`
 	Reviewed   int            `json:"reviewed"`
+	Changed    int            `json:"changed"`
 	Findings   []Finding      `json:"findings"` // 不一致・未実装（人が判断する）
 	Gaps       []Finding      `json:"gaps"`     // 記述不足（コードと矛盾はしないが、記述に無い条件・例外がある）
 	Issues     []Issue        `json:"issues"`
@@ -85,13 +92,11 @@ func Path(p *project.Project) string { return filepath.Join(p.Root, project.Dir,
 // Check は .canon/verify.yaml を検査する。
 func Check(p *project.Project) (*Report, error) {
 	r := &Report{Verdicts: map[string]int{}}
-	var f File
-	data, err := os.ReadFile(Path(p))
-	if err == nil {
-		if err := yaml.Unmarshal(data, &f); err != nil {
-			return nil, fmt.Errorf("verify.yaml が読めません: %w", err)
-		}
+	f, err := Load(Path(p))
+	if err != nil {
+		return nil, err
 	}
+	units := Units(p.SourcesDir())
 	byAnchor := map[string]*Entry{}
 	for i := range f.Entries {
 		e := &f.Entries[i]
@@ -122,9 +127,27 @@ func Check(p *project.Project) (*Report, error) {
 			continue
 		}
 		r.Verified++
+		us := units[a]
+		r.Units += len(us)
+		covered := map[int]bool{}
+		for _, s := range e.Statements {
+			if s.Unit < 1 || s.Unit > len(us) {
+				r.Issues = append(r.Issues, Issue{a, fmt.Sprintf("unit %d はこの箇所にありません（1〜%d）。canon verify --init で作った区切りを使ってください", s.Unit, len(us))})
+			} else {
+				covered[s.Unit] = true
+				if model.NormalizeRef(s.Source) != model.NormalizeRef(us[s.Unit-1]) {
+					r.Issues = append(r.Issues, Issue{fmt.Sprintf("%s #%d", a, s.Unit), "source（区切りの文面）が情報源と違います。書き換えずに、分けたいときは text で分けてください"})
+				}
+			}
+		}
+		for i := range us {
+			if !covered[i+1] {
+				r.Issues = append(r.Issues, Issue{fmt.Sprintf("%s #%d", a, i+1), "この区切りが照合されていません「" + short(us[i]) + "」"})
+			}
+		}
 		for _, s := range e.Statements {
 			r.Statements++
-			where := a + "「" + short(s.Text) + "」"
+			where := fmt.Sprintf("%s #%d「%s」", a, s.Unit, short(s.Text))
 			if strings.TrimSpace(s.Text) == "" {
 				r.Issues = append(r.Issues, Issue{a, "text（照合した文）がありません"})
 			}
@@ -150,13 +173,22 @@ func Check(p *project.Project) (*Report, error) {
 					r.Issues = append(r.Issues, Issue{where, msg})
 				}
 			}
-			if strings.TrimSpace(s.Note) != "" && (s.Verdict == "consistent" || s.Review == "changed") {
+			if s.Verdict == "consistent" || s.Verdict == "incomplete" || s.Review == "changed" {
 				r.NeedReview++
 				switch s.Review {
-				case "kept", "changed":
+				case "kept":
 					r.Reviewed++
+				case "changed":
+					r.Reviewed++
+					r.Changed++
+					if strings.TrimSpace(s.ReviewNote) == "" {
+						r.Issues = append(r.Issues, Issue{where, "review: changed には、見つけた反例（入力・状態とコードの位置）を review_note に書いてください"})
+					}
+					if s.Verdict == "consistent" {
+						r.Issues = append(r.Issues, Issue{where, "review: changed なのに一致のままです。反例があるなら inconsistent か incomplete にしてください"})
+					}
 				case "":
-					r.Issues = append(r.Issues, Issue{where, "一致なのに注記があります。差に気づいている可能性があるので、別のエージェントの見直し（review: kept / changed）が必要です"})
+					r.Issues = append(r.Issues, Issue{where, s.Verdict + " には、照合していない別のエージェントの反例探し（review: kept / changed）が必要です"})
 				default:
 					r.Issues = append(r.Issues, Issue{where, "review は kept / changed のどちらかにしてください"})
 				}
@@ -230,12 +262,28 @@ func short(s string) string {
 	return string(r)
 }
 
+// Load は照合の記録を読む（無ければ空）。
+func Load(path string) (*File, error) {
+	var f File
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return &f, nil
+		}
+		return nil, err
+	}
+	if err := yaml.Unmarshal(data, &f); err != nil {
+		return nil, fmt.Errorf("%s が読めません: %w", path, err)
+	}
+	return &f, nil
+}
+
 // Text は人が読む形。
 func (r *Report) Text() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "照合済みの箇所: %d / %d、照合した文: %d（範囲外 %d）\n", r.Verified, r.Anchors, r.Statements, r.OutOfScope)
+	fmt.Fprintf(&b, "照合済みの箇所: %d / %d（区切り %d）、照合した文: %d（範囲外 %d）\n", r.Verified, r.Anchors, r.Units, r.Statements, r.OutOfScope)
 	fmt.Fprintf(&b, "判定: 一致 %d・矛盾 %d・記述不足 %d・未実装 %d・照合不能 %d\n", r.Verdicts["consistent"], r.Verdicts["inconsistent"], r.Verdicts["incomplete"], r.Verdicts["not_implemented"], r.Verdicts["not_checkable"])
-	fmt.Fprintf(&b, "見直し: 一致＋注記 %d 件のうち見直し済み %d 件\n", r.NeedReview, r.Reviewed)
+	fmt.Fprintf(&b, "反例探し: 一致・記述不足 %d 件のうち済み %d 件（判定が変わったもの %d 件）\n", r.NeedReview, r.Reviewed, r.Changed)
 	if len(r.Findings) > 0 {
 		b.WriteString("\n■ 矛盾・未実装（人の判断が要る。どちらが正しいかで、実装の修正か設計書の修正かが決まる）\n")
 		for _, f := range r.Findings {
