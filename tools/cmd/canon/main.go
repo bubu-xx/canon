@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/bubu-xx/canon/tools/internal/check"
 	"github.com/bubu-xx/canon/tools/internal/crosscheck"
@@ -24,6 +25,7 @@ import (
 	"github.com/bubu-xx/canon/tools/internal/render"
 	"github.com/bubu-xx/canon/tools/internal/schema"
 	"github.com/bubu-xx/canon/tools/internal/score"
+	"github.com/bubu-xx/canon/tools/internal/sources"
 	"github.com/bubu-xx/canon/tools/internal/verify"
 )
 
@@ -47,6 +49,7 @@ func init() {
 		{"query", "要素を検索する", cmdQuery},
 		{"impact", "要素を変えたときに見直しが要る要素を出す", cmdImpact},
 		{"context", "課題に着手する前の材料一式（context_pack）を出す", cmdContext},
+		{"sources", "文書（Markdown・テキスト）を原文のまま、アンカー付きで .canon/sources/ に取り込む（canon sources import <ファイルかフォルダー>...）", cmdSources},
 		{"verify", "箇所単位の照合（.canon/verify.yaml）の網羅と記録の形を検査する（不備があれば終了コード 1）", cmdVerify},
 		{"crosscheck", "設計書の記述（識別子）と、同じ要素が出典にしているコードを機械的に突き合わせる", cmdCrosscheck},
 		{"next-id", "型の次の ID を出す（例: canon next-id bhv）", cmdNextID},
@@ -439,6 +442,7 @@ func cmdContext(args []string) int {
 func cmdNextID(args []string) int {
 	var c common
 	fs := flags("next-id", &c)
+	peek := fs.Bool("peek", false, "予約せずに次の ID を見るだけ")
 	if fs.Parse(args) != nil || fs.NArg() != 1 {
 		fmt.Fprintln(os.Stderr, "使い方: canon next-id <型 | question>")
 		return 2
@@ -465,6 +469,13 @@ func cmdNextID(args []string) int {
 			ids = append(ids, id)
 		}
 	}
+	// 予約済みの ID も数に入れる（並行で取り込んでいる別のエージェントが、まだ書いていない要素）
+	resDir := filepath.Join(p.Root, project.Dir, "reserved")
+	if ents, err := os.ReadDir(resDir); err == nil {
+		for _, e := range ents {
+			ids = append(ids, e.Name())
+		}
+	}
 	max := 0
 	for _, id := range ids {
 		var n int
@@ -472,8 +483,30 @@ func cmdNextID(args []string) int {
 			max = n
 		}
 	}
-	fmt.Printf("%s-%03d\n", prefix, max+1)
-	return 0
+	if *peek {
+		fmt.Printf("%s-%03d\n", prefix, max+1)
+		return 0
+	}
+	// 「無ければ作る、あれば失敗する」で予約する。同時に呼ばれても同じ ID は二度と返らない
+	if err := os.MkdirAll(resDir, 0o755); err != nil {
+		fmt.Fprintln(os.Stderr, "canon:", err)
+		return 2
+	}
+	for n := max + 1; ; n++ {
+		id := fmt.Sprintf("%s-%03d", prefix, n)
+		f, err := os.OpenFile(filepath.Join(resDir, id), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
+		if err != nil {
+			if os.IsExist(err) {
+				continue
+			}
+			fmt.Fprintln(os.Stderr, "canon:", err)
+			return 2
+		}
+		fmt.Fprintf(f, "reserved %s\n", time.Now().Format(time.RFC3339))
+		f.Close()
+		fmt.Println(id)
+		return 0
+	}
 }
 
 func cmdScore(args []string) int {
@@ -548,11 +581,72 @@ func cmdCrosscheck(args []string) int {
 	return 0
 }
 
+func cmdSources(args []string) int {
+	if len(args) == 0 || args[0] != "import" {
+		fmt.Fprintln(os.Stderr, "使い方: canon sources import [--version 版] <ファイルかフォルダー>...")
+		return 2
+	}
+	var c common
+	fs := flags("sources import", &c)
+	ver := fs.String("version", "", "版（既定: git の最終コミット日、無ければ更新日）")
+	if fs.Parse(args[1:]) != nil || fs.NArg() == 0 {
+		fmt.Fprintln(os.Stderr, "使い方: canon sources import [--version 版] <ファイルかフォルダー>...")
+		return 2
+	}
+	root, err := project.FindRoot(c.dir)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "canon:", err)
+		return 2
+	}
+	out := filepath.Join(root, project.Dir, "sources")
+	skipDir := map[string]bool{".git": true, ".canon": true, "target": true, "node_modules": true, "vendor": true, "dist": true}
+	var files []string
+	for _, a := range fs.Args() {
+		_ = filepath.WalkDir(a, func(path string, d os.DirEntry, err error) error {
+			if err != nil {
+				return nil
+			}
+			if d.IsDir() {
+				if path != a && skipDir[d.Name()] {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+			// フォルダーからは Markdown だけを拾う。テキストファイルは名前を指定したときだけ取り込む
+			ext := strings.ToLower(filepath.Ext(path))
+			if ext == ".md" || ext == ".markdown" || path == a {
+				abs, _ := filepath.Abs(path)
+				files = append(files, abs)
+			}
+			return nil
+		})
+	}
+	var results []sources.Result
+	added, skipped, anchors := 0, 0, 0
+	for _, f := range files {
+		r, err := sources.Import(root, out, f, *ver)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "canon:", f, err)
+			continue
+		}
+		results = append(results, r)
+		if r.Skipped != "" {
+			skipped++
+		} else {
+			added++
+			anchors += r.Anchors
+		}
+	}
+	emit(c, results, fmt.Sprintf("取り込み %d 件（アンカー %d 個）、既にあったので飛ばした %d 件 → %s\n", added, anchors, skipped, out))
+	return 0
+}
+
 func cmdVerify(args []string) int {
 	var c common
 	fs := flags("verify", &c)
 	initF := fs.Bool("init", false, "情報源から照合の雛形（.canon/verify.yaml）を作る")
 	force := fs.Bool("force", false, "--init で既存の verify.yaml を上書きする")
+	split := fs.Bool("split", false, "--init で情報源のファイルごとに .canon/verify/ に分けて作る（並行で照合するとき）")
 	cmp := fs.String("compare", "", "別の照合の記録（verify.yaml）と区切りごとに突き合わせる")
 	if fs.Parse(args) != nil {
 		return 2
@@ -562,16 +656,20 @@ func cmdVerify(args []string) int {
 		return code
 	}
 	if *initF {
-		na, nu, err := verify.Init(p, *force)
+		na, nu, err := verify.Init(p, *force, *split)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "canon:", err)
 			return 2
 		}
-		fmt.Printf("%s を作りました（箇所 %d、区切り %d）\n", verify.Path(p), na, nu)
+		where := verify.Path(p)
+		if *split {
+			where = verify.Dir(p)
+		}
+		fmt.Printf("%s に照合の雛形を作りました（箇所 %d、区切り %d）\n", where, na, nu)
 		return 0
 	}
 	if *cmp != "" {
-		a, err := verify.Load(verify.Path(p))
+		a, err := verify.LoadProject(p)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "canon:", err)
 			return 2

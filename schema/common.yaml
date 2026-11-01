@@ -90,7 +90,8 @@ link:
     verifies:     "試験が検証する対象（TST → BHV / REQ）"
     uses:         "依存している"
     decided_by:   "設計判断に基づく"
-    defines:      "用語の定義を適用している"
+        defines:      "用語の定義を適用している"
+    part_of:      "構成要素の親子（クレート → アプリ、モジュール → クレート）"
 
 # --- フィールド定義の書き方（types/*.yaml 用） ----------------------------
 field_definition:

@@ -87,6 +87,9 @@ func Run(p *project.Project, opt Options) []Issue {
 			c.add("error", "too_many", "", strings.Join(count[t], ", "), "", fmt.Sprintf("型 %s の要素は %d 件までです（%d 件あります）", or(td.Label, t), td.MaxElements, len(count[t])), "1つの要素にまとめてください")
 		}
 	}
+	if len(opt.Only) == 0 {
+		c.reserved()
+	}
 	qids := make([]string, 0, len(p.Questions))
 	for id := range p.Questions {
 		qids = append(qids, id)
@@ -525,4 +528,29 @@ func or(a, b string) string {
 		return b
 	}
 	return a
+}
+
+// reserved は、canon next-id で予約したのに要素・質問が作られていない ID を警告する（欠番になるだけで害は無い）。
+func (c *checker) reserved() {
+	dir := filepath.Join(c.p.Root, project.Dir, "reserved")
+	ents, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	var unused []string
+	for _, e := range ents {
+		id := e.Name()
+		if _, ok := c.p.Elements[id]; ok {
+			continue
+		}
+		if _, ok := c.p.Questions[id]; ok {
+			continue
+		}
+		unused = append(unused, id)
+	}
+	if len(unused) > 0 {
+		sort.Strings(unused)
+		c.add("warning", "unused_reservation", dir, strings.Join(unused, ", "), "", fmt.Sprintf("予約したまま使われていない ID が %d 件あります", len(unused)),
+			"作るのをやめたのなら .canon/reserved/ の該当ファイルを消してください（欠番になるだけで害はありません）")
+	}
 }

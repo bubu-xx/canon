@@ -103,7 +103,7 @@ func Path(p *project.Project) string { return filepath.Join(p.Root, project.Dir,
 // Check は .canon/verify.yaml を検査する。
 func Check(p *project.Project) (*Report, error) {
 	r := &Report{Verdicts: map[string]int{}}
-	f, err := Load(Path(p))
+	f, err := LoadProject(p)
 	if err != nil {
 		return nil, err
 	}
@@ -351,9 +351,43 @@ func short(s string) string {
 	return string(r)
 }
 
-// Load は照合の記録を読む（無ければ空）。
+// Dir は分けて記録するときの置き場（.canon/verify/*.yaml）。
+func Dir(p *project.Project) string { return filepath.Join(p.Root, project.Dir, "verify") }
+
+// LoadProject はプロジェクトの照合の記録をすべて読む（.canon/verify.yaml と .canon/verify/*.yaml）。
+func LoadProject(p *project.Project) (*File, error) {
+	f, err := Load(Path(p))
+	if err != nil {
+		return nil, err
+	}
+	d, err := Load(Dir(p))
+	if err != nil {
+		return nil, err
+	}
+	f.Entries = append(f.Entries, d.Entries...)
+	return f, nil
+}
+
+// Load は照合の記録を読む（無ければ空）。path がディレクトリなら、その中の *.yaml をすべて読む。
 func Load(path string) (*File, error) {
 	var f File
+	if st, err := os.Stat(path); err == nil && st.IsDir() {
+		ents, err := os.ReadDir(path)
+		if err != nil {
+			return nil, err
+		}
+		for _, e := range ents {
+			if e.IsDir() || !strings.HasSuffix(e.Name(), ".yaml") {
+				continue
+			}
+			g, err := Load(filepath.Join(path, e.Name()))
+			if err != nil {
+				return nil, err
+			}
+			f.Entries = append(f.Entries, g.Entries...)
+		}
+		return &f, nil
+	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -13,35 +14,57 @@ import (
 )
 
 // Init は情報源から照合の雛形（区切りごとに1つの文）を作る。既にあれば force のときだけ上書きする。
-func Init(p *project.Project, force bool) (int, int, error) {
-	path := Path(p)
-	if _, err := os.Stat(path); err == nil && !force {
-		return 0, 0, fmt.Errorf("%s は既にあります（作り直すなら --force）", path)
-	}
+// split なら情報源のファイルごとに .canon/verify/<ファイル名>.yaml に分けて作る（並行で照合するとき、書き込みがぶつからない）。
+func Init(p *project.Project, force, split bool) (int, int, error) {
 	units := Units(p.SourcesDir())
-	var f File
-	n := 0
+	files := map[string]*File{}
+	n, na := 0, 0
 	for _, a := range AnchorOrder(units) {
 		e := Entry{Anchor: a}
 		for i, u := range units[a] {
 			e.Statements = append(e.Statements, Statement{Unit: i + 1, Source: u, Text: u})
 			n++
 		}
-		f.Entries = append(f.Entries, e)
+		na++
+		path := Path(p)
+		if split {
+			src := filepath.Base(p.Anchors[a])
+			path = filepath.Join(Dir(p), strings.TrimSuffix(src, filepath.Ext(src))+".yaml")
+		}
+		if files[path] == nil {
+			files[path] = &File{}
+		}
+		files[path].Entries = append(files[path].Entries, e)
 	}
+	for path := range files {
+		if _, err := os.Stat(path); err == nil && !force {
+			return 0, 0, fmt.Errorf("%s は既にあります（作り直すなら --force）", path)
+		}
+	}
+	if split {
+		if err := os.MkdirAll(Dir(p), 0o755); err != nil {
+			return 0, 0, err
+		}
+	}
+	for path, f := range files {
+		if err := writeFile(path, f); err != nil {
+			return 0, 0, err
+		}
+	}
+	return na, n, nil
+}
+
+func writeFile(path string, f *File) error {
 	var buf bytes.Buffer
 	buf.WriteString("# canon verify --init が作った照合の雛形。\n")
 	buf.WriteString("# unit と source は書き換えない。1つの区切りに複数の主張があれば、同じ unit・source の文を増やして text で分ける（まとめてはいけない）。\n")
 	buf.WriteString("# 各文に scope（in / out）と、in なら verdict・code・note などを書く。書き方は verify スキルを参照。\n")
 	enc := yaml.NewEncoder(&buf)
 	enc.SetIndent(2)
-	if err := enc.Encode(&f); err != nil {
-		return 0, 0, err
+	if err := enc.Encode(f); err != nil {
+		return err
 	}
-	if err := os.WriteFile(path, buf.Bytes(), 0o644); err != nil {
-		return 0, 0, err
-	}
-	return len(f.Entries), n, nil
+	return os.WriteFile(path, buf.Bytes(), 0o644)
 }
 
 var severity = map[string]int{"": 0, "out": 1, "not_checkable": 2, "consistent": 3, "incomplete": 4, "inconsistent": 5, "not_implemented": 5}
