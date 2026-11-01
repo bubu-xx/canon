@@ -90,7 +90,7 @@ link:
     verifies:     "試験が検証する対象（TST → BHV / REQ）"
     uses:         "依存している"
     decided_by:   "設計判断に基づく"
-        defines:      "用語の定義を適用している"
+    defines:      "用語の定義を適用している"
     part_of:      "構成要素の親子（クレート → アプリ、モジュール → クレート）"
 
 # --- フィールド定義の書き方（types/*.yaml 用） ----------------------------
@@ -103,8 +103,8 @@ field_definition:
     blocking:    { description: "true なら着手条件（必須）。unknown / conflict のままだと AI はこの要素の実装・修正に着手しない。false は注意" }
     required_when: { description: "他の項目が確定していて、その値がこの中にあるときだけ必須（例：{ kind: [non_functional] }）。条件の項目が未確定なら必須にしない" }
     max_elements: { description: "（型の直下）その型の要素の数の上限。プロジェクト（prj）は 1" }
+    description: { description: "このフィールドが何を表すか" }
 
 # --- プロファイル（profiles/*.yaml） --------------------------------------
 # プロジェクトの種類ごとに、型の項目の required / blocking を上書きする。
 # 対象プロジェクトの .canon/config.yaml の profile で選ぶ（既定: business）。
-    description: { description: "このフィールドが何を表すか" }

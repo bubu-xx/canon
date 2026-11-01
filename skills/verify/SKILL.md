@@ -51,7 +51,7 @@ entries:
         scope: in
         code: ["libs/crates/interchange/src/lib.rs:199-222"]
         verdict: inconsistent
-                note: "コードは固定名 composite/full.png を読み、manifest.json の rendition を参照しない"
+        note: "コードは固定名 composite/full.png を読み、manifest.json の rendition を参照しない"
         question: Q-010
         affects: ["DAT-002.attributes"]
       - unit: 3
@@ -68,7 +68,7 @@ entries:
    - その食い違いが Canon のどの項目の話かを `affects` に書く（`BHV-003.error_cases` の形。複数可）
    - その項目を `status: conflict` にし、claims に記述の主張（`kind: document`、アンカー）とコードの主張（`kind: code`、パス:行）を残し、question に同じ質問を書く。それまでの確定値はどちらかの claim になる。未実装は、コードの主張が無いので unknown でもよい
    - 当てはまる要素・項目が Canon に無ければ、ingest の規則で要素を作ってから挙げる（情報源の内容は Canon のどこかに入る）
-      - 1つの項目の質問は1つ（`canon verify` が確かめる）。同じ項目に複数の食い違いがあれば、同じ質問の context にすべて書く。1つの答えで決まらないほど別の話なら、要素や項目の分け方が粗い（ingest の単位を見直す）
+   - 1つの項目の質問は1つ（`canon verify` が確かめる）。同じ項目に複数の食い違いがあれば、同じ質問の context にすべて書く。1つの答えで決まらないほど別の話なら、要素や項目の分け方が粗い（ingest の単位を見直す）
    - 人が回答したら（ask スキル）、項目は回答（`kind: answer`、その質問）を出典に confirmed になる。照合の記録はそのまま残す
 4. **反例探し**：consistent と incomplete の**すべての文**を、照合をしていない別のエージェント（Agent ツールで refuter エージェントを新しく起動する。文書ごと、または10〜20文ずつに分けて並行で起動してよい）に渡す。渡すのは anchor・unit・text・verdict・code だけで、note やこれまでの判断は渡さない。返ってきた結果を記録する：
    - kept → `review: kept`
