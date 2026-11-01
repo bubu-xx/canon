@@ -58,6 +58,8 @@ type Summary struct {
 	OpenQuestions   int            `json:"open_questions"`
 	SourceAnchors   int            `json:"source_anchors"`
 	SourceUsed      int            `json:"source_used"`
+	CodeFunctions   int            `json:"code_functions,omitempty"` // AddCode を呼んだときだけ
+	CodeCovered     int            `json:"code_covered,omitempty"`
 }
 
 // Report は gaps の結果。
@@ -67,6 +69,14 @@ type Report struct {
 	Links     []LinkGap         `json:"links"`
 	Questions []QuestionSummary `json:"questions"`
 	Unused    []Unused          `json:"unused_sources"`
+	Uncovered []UncoveredFile   `json:"uncovered_code,omitempty"`
+	codeDone  bool
+}
+
+// AddCode はコードの網羅（どの関数も要素の出典に含まれているか）を加える。コードを全部読むので、必要なときだけ呼ぶ。
+func (r *Report) AddCode(p *project.Project) {
+	r.Summary.CodeCovered, r.Summary.CodeFunctions, r.Uncovered = CodeCoverage(p)
+	r.codeDone = true
 }
 
 // Build は gaps を計算する。
@@ -203,6 +213,9 @@ func (r *Report) Text() string {
 	fmt.Fprintf(&b, "AI が着手できる要素: %d / 着手条件が欠けている要素: %d（必須の空白・矛盾 %d 件）\n", s.ReadyElements, s.BlockedElements, s.BlockingGaps)
 	fmt.Fprintf(&b, "リンク不足: %d / 未回答の質問: %d\n", s.LinkGaps, s.OpenQuestions)
 	fmt.Fprintf(&b, "情報源の網羅: %d / %d 箇所が Canon の出典になっている（未使用 %d）\n", s.SourceUsed, s.SourceAnchors, s.SourceAnchors-s.SourceUsed)
+	if r.codeDone {
+		fmt.Fprintf(&b, "コードの網羅: %d / %d 関数が Canon の出典に含まれている（含まれていない %d、%d ファイル）\n", s.CodeCovered, s.CodeFunctions, s.CodeFunctions-s.CodeCovered, len(r.Uncovered))
+	}
 	if len(r.Fields) > 0 {
 		b.WriteString("\n■ 空白・矛盾\n")
 		for _, f := range r.Fields {
@@ -227,6 +240,23 @@ func (r *Report) Text() string {
 		b.WriteString("\n■ 出典として使われていない情報源の箇所（取りこぼしの可能性）\n")
 		for _, u := range r.Unused {
 			fmt.Fprintf(&b, "  %s（%s）\n", u.Anchor, u.File)
+		}
+	}
+	if len(r.Uncovered) > 0 {
+		b.WriteString("\n■ Canon の出典に含まれていない関数（どの要素からも指されていないコード）\n")
+		const maxFiles = 100
+		for i, u := range r.Uncovered {
+			if i == maxFiles {
+				fmt.Fprintf(&b, "  …ほか %d ファイル（すべては --json で）\n", len(r.Uncovered)-maxFiles)
+				break
+			}
+			names := u.Functions
+			more := ""
+			if len(names) > 8 {
+				more = fmt.Sprintf(" ほか %d", len(names)-8)
+				names = names[:8]
+			}
+			fmt.Fprintf(&b, "  %s（%d / %d）: %s%s\n", u.File, len(u.Functions), u.Total, strings.Join(names, ", "), more)
 		}
 	}
 	if len(r.Questions) > 0 {

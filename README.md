@@ -111,6 +111,7 @@ canon render --format xlsx --template 様式.xlsx --map 様式.map.yaml   # 会�
 - unknown に値を書けない。conflict に値を書けない（主張は claims に残す）。状態は confirmed / unknown / conflict の3つだけ
 - unknown / conflict には質問が必須。スキーマの必須項目は値が無くても unknown として置く
 - リンクにも出典が必須。既存の情報源は書き換えられない
+- 情報源の網羅とコードの網羅を `canon gaps` が数える。どの文書の箇所も、どの関数も、Canon のいずれかの要素の出典になっていなければならない（対象外は `.canon/coverage.yaml` に理由と判断者を書いて外す：文書は `ignored`、コードは `ignored_code`）
 - 照合（verify）で矛盾・未実装とした文は、Canon のどの項目の話かを `affects` で示し、その項目は conflict（未実装は unknown も可）で同じ質問につながっていなければならない
 
 ## 開発

@@ -237,6 +237,7 @@ func cmdGaps(args []string) int {
 	var c common
 	fs := flags("gaps", &c)
 	blocking := fs.Bool("blocking", false, "着手条件（必須）の空白・矛盾だけを出す")
+	noCode := fs.Bool("no-code", false, "コードの網羅（関数が要素の出典に含まれているか）を調べない")
 	if fs.Parse(args) != nil {
 		return 2
 	}
@@ -245,6 +246,9 @@ func cmdGaps(args []string) int {
 		return code
 	}
 	r := gaps.Build(p, *blocking)
+	if !*noCode && !*blocking {
+		r.AddCode(p)
+	}
 	emit(c, r, r.Text())
 	return 0
 }
