@@ -1,0 +1,33 @@
+# 構成要素（CMP）：システムを構成する部品（サブシステム、モジュール、クレート、パッケージ、サービス）。
+# 方式設計（基本設計）とモジュール設計（詳細設計）の両方の項目を持つ。
+type: cmp
+id_prefix: CMP
+version: 0
+label: 構成要素
+fields:
+  responsibility:
+    label: "責務"
+    type: text
+    required: true
+    blocking: true
+    description: "この部品が受け持つこと（と、受け持たないこと）"
+  interfaces:
+    label: "公開インタフェース"
+    type: list
+    required: true
+    blocking: true
+    description: "外に見せる関数・メソッド・コマンド・API"
+  technology:
+    label: "技術・製品"
+    type: list
+    required: false
+    blocking: false
+    description: "使う言語・ライブラリ・製品"
+  deployment:
+    label: "配置・環境"
+    type: text
+    required: false
+    blocking: false
+    description: "どこで動くか（OS、プロセス、サーバー）"
+links:
+  required: {}

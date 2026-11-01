@@ -11,6 +11,7 @@
 #   id / name / fields.<項目> / links.<種別> / inbound.<種別> / project / today / config.scope / stat.<…>
 #   "=固定文字列"（空の "=" は人が記入する欄）
 #   "gap=<説明>" … Canon にこの情報の置き場が無いことを明示する
+#   "prj.<項目>"  … プロジェクト全体の情報（PRJ の1件）の項目
 # 型や項目が Canon のスキーマに無い式は、出力時に「型が無い」「項目が無い」として不足一覧に出る。
 
 documents:
@@ -23,17 +24,17 @@ documents:
       - kind: form
         name: 1.はじめに
         items:
-          - [目的・背景, "gap=プロジェクトの目的・背景"]
+          - [目的・背景, "prj.purpose"]
           - [対象範囲, config.scope]
-          - [対象外事項, "gap=対象外事項"]
-          - [前提条件, "gap=プロジェクトの前提条件"]
-          - [関係者・体制, "gap=関係者と役割"]
+          - [対象外事項, "prj.out_of_scope"]
+          - [前提条件, "prj.assumptions"]
+          - [関係者・体制, "prj.stakeholders"]
       - kind: form
         name: 2.業務要件
         items:
-          - [現行業務フロー（As-Is）, "gap=業務フロー"]
-          - [新業務フロー（To-Be）, "gap=業務フロー"]
-          - [業務上の課題と解決方針, "gap=業務課題"]
+          - [現行業務フロー（As-Is）, "prj.business_flow_as_is"]
+          - [新業務フロー（To-Be）, "prj.business_flow_to_be"]
+          - [業務上の課題と解決方針, "prj.business_issues"]
       - kind: table
         name: 3.1 機能要件
         rows: req
@@ -123,7 +124,7 @@ documents:
       - kind: form
         name: 1.概要
         items:
-          - [システムの概要, "gap=システム全体の概要"]
+          - [システムの概要, "prj.system_overview"]
           - [対象範囲, config.scope]
           - [関連文書, "=要件定義書、詳細設計書"]
       - kind: table
@@ -200,7 +201,7 @@ documents:
           - [要件ID, id, 10]
           - [要件名, name, 22]
           - [内容, fields.statement, 40]
-          - [対策, "gap=セキュリティ対策の設計", 40]
+          - [対策（実現する機能・構成）, "inbound.derived_from", 40]
       - kind: questions
 
   - file: 03_詳細設計書
@@ -270,8 +271,8 @@ documents:
         items:
           - [目的, "=詳細設計書の各処理が仕様どおりに動作することを、モジュール単位で確認する"]
           - [対象範囲, config.scope]
-          - [試験環境, "gap=試験環境"]
-          - [スタブ・ドライバ, "gap=スタブ・ドライバ"]
+          - [試験環境, "prj.test_environment"]
+          - [スタブ・ドライバ, "prj.test_stubs"]
           - [合否判定基準, "=すべての試験項目で期待結果と実施結果が一致すること"]
       - kind: table
         name: 2.試験項目
@@ -304,8 +305,8 @@ documents:
         items:
           - [目的, "=基本設計書のとおりに、モジュール間・外部インタフェース間でデータが正しく受け渡されることを確認する"]
           - [対象範囲, config.scope]
-          - [結合の進め方, "gap=結合順序（トップダウン・ボトムアップ等）"]
-          - [試験環境, "gap=試験環境"]
+          - [結合の進め方, "prj.integration_order"]
+          - [試験環境, "prj.test_environment"]
           - [合否判定基準, "=すべての試験項目で期待結果と実施結果が一致すること"]
       - kind: table
         name: 2.試験項目
@@ -336,7 +337,7 @@ documents:
         items:
           - [目的, "=要件定義書の機能要件・非機能要件を、システム全体として満たしていることを確認する"]
           - [対象範囲, config.scope]
-          - [試験環境（本番相当）, "gap=試験環境"]
+          - [試験環境（本番相当）, "prj.test_environment"]
           - [合否判定基準, "=すべての試験項目で期待結果と実施結果が一致し、未解決の重大な不具合が無いこと"]
       - kind: table
         name: 2.試験項目

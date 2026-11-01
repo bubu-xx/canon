@@ -118,6 +118,11 @@ var enumLabels = map[string]string{
 	"must": "必須（must）", "should": "推奨（should）", "could": "任意（could）",
 	"unit": "単体", "integration": "結合", "system": "システム", "acceptance": "受入",
 	"idempotent": "冪等", "not_idempotent": "冪等でない",
+	"availability": "可用性", "performance": "性能・拡張性", "operability": "運用・保守性", "migration": "移行性",
+	"security": "セキュリティ", "environment": "システム環境・エコロジー",
+	"normal": "正常系", "abnormal": "異常系", "boundary": "境界値",
+	"function": "機能", "reliability": "信頼性", "usability": "使用性", "compatibility": "互換性", "operational": "運用",
+	"inbound": "受信", "outbound": "送信", "bidirectional": "双方向",
 }
 
 func lines(s string) []string {

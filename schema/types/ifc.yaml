@@ -1,0 +1,45 @@
+# 外部インタフェース（IF）：外部のシステム・アプリ・ファイル形式とのやり取り。
+type: ifc
+id_prefix: IF
+version: 0
+label: 外部インタフェース
+fields:
+  counterpart:
+    label: "連携先"
+    type: string
+    required: true
+    blocking: true
+    description: "やり取りする相手（システム、アプリ、ファイル形式、OS の機能）"
+  direction:
+    label: "方向"
+    type: enum
+    values: [inbound, outbound, bidirectional]
+    required: true
+    blocking: true
+    description: "受信／送信／双方向"
+  method:
+    label: "方式・プロトコル"
+    type: text
+    required: true
+    blocking: true
+    description: "やり取りの方式（API、ファイル、プロセス起動、共有メモリなど）とプロトコル・形式"
+  items:
+    label: "送受信項目"
+    type: list
+    required: true
+    blocking: true
+    description: "やり取りする項目・データの形"
+  timeout:
+    label: "タイムアウト・再試行"
+    type: text
+    required: false
+    blocking: false
+    description: "待ち時間の上限と、再試行の有無・回数"
+  failure_handling:
+    label: "異常時の動作"
+    type: list
+    required: true
+    blocking: true
+    description: "相手が無い・応答しない・壊れたデータを返したときの動作"
+links:
+  required: {}

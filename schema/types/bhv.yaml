@@ -46,6 +46,12 @@ fields:
     required: true
     blocking: true
     description: "エラー条件と、そのときの挙動（エラーコード、状態を変えるか）"
+  postconditions:
+    label: "事後条件"
+    type: list
+    required: true
+    blocking: false
+    description: "正常に終わったときに成り立っている条件"
   state_changes:
     label: "状態の変化"
     type: list

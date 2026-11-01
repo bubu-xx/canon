@@ -13,14 +13,16 @@ import (
 
 // FieldDef はフィールドの定義。
 type FieldDef struct {
-	Name        string   `json:"name"`
-	Label       string   `json:"label"`
-	Type        string   `json:"type"`
-	Values      []string `json:"values,omitempty"`
-	Units       []string `json:"units,omitempty"`
-	Required    bool     `json:"required"`
-	Blocking    bool     `json:"blocking"`
-	Description string   `json:"description,omitempty"`
+	Name     string   `json:"name"`
+	Label    string   `json:"label"`
+	Type     string   `json:"type"`
+	Values   []string `json:"values,omitempty"`
+	Units    []string `json:"units,omitempty"`
+	Required bool     `json:"required"`
+	// RequiredWhen は条件付きの必須。他の項目が確定していて値がこの中にあれば必須（Required が false でも）
+	RequiredWhen map[string][]string `json:"required_when,omitempty"`
+	Blocking     bool                `json:"blocking"`
+	Description  string              `json:"description,omitempty"`
 }
 
 // LinkRule は必須リンクの定義。
@@ -38,6 +40,7 @@ type TypeDef struct {
 	FieldOrder      []string             `json:"field_order"`
 	RequiredLinks   map[string]LinkRule  `json:"required_links"`
 	RequiredInbound map[string]LinkRule  `json:"required_inbound"`
+	MaxElements     int                  `json:"max_elements,omitempty"` // 0 は上限なし
 }
 
 // Schema はスキーマ全体。
@@ -78,7 +81,8 @@ func LoadWithProfile(dir, extDir, profile string) (*Schema, error) {
 		return nil, err
 	}
 	s.Profile = profile
-	order := []string{"req", "bhv", "tst"}
+	// 設計書の流れ（全体 → 要求 → 外部から見えるもの → 振る舞い → 構成・判断 → 用語 → 試験）の順に並べる
+	order := []string{"prj", "req", "scr", "rpt", "ifc", "dat", "bhv", "cmp", "adr", "term", "tst"}
 	seen := map[string]bool{}
 	for _, t := range order {
 		if _, ok := s.Types[t]; ok {
@@ -141,6 +145,9 @@ func (s *Schema) loadTypes(dir string) error {
 		if v := val(get(doc, "label")); v != "" {
 			td.Label = v
 		}
+		if v := val(get(doc, "max_elements")); v != "" {
+			fmt.Sscanf(v, "%d", &td.MaxElements)
+		}
 		fields := get(doc, "fields")
 		for i := 0; fields != nil && i+1 < len(fields.Content); i += 2 {
 			fname := fields.Content[i].Value
@@ -153,6 +160,12 @@ func (s *Schema) loadTypes(dir string) error {
 			fd.Description = val(get(fn, "description"))
 			fd.Values = list(get(fn, "values"))
 			fd.Units = list(get(fn, "units"))
+			if rw := get(fn, "required_when"); rw != nil {
+				fd.RequiredWhen = map[string][]string{}
+				for k := 0; k+1 < len(rw.Content); k += 2 {
+					fd.RequiredWhen[rw.Content[k].Value] = list(rw.Content[k+1])
+				}
+			}
 			if fd.Label == "" {
 				fd.Label = fname
 			}

@@ -1,0 +1,8 @@
+id: Q-003
+type: question
+asks_for: [BHV-001.postconditions]
+blocking: false
+to: "注文チーム"
+context: "検索が正常に終わったときに成り立つ条件（事後条件）が、詳細設計書・基本設計書のどこにも書かれていない。検索は状態を変えない（詳細設計書 シート7 B32）"
+options: ["事後条件は無い（状態を変えない検索のため）"]
+status: open

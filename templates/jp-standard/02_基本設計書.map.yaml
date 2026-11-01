@@ -47,7 +47,7 @@ sheets:
       expr: project
       label: システム名
     B5:
-      expr: gap=システム全体の概要
+      expr: prj.system_overview
       label: システムの概要
     B6:
       expr: config.scope
@@ -243,8 +243,8 @@ sheets:
       expr: fields.statement
       label: 内容
     D:
-      expr: gap=セキュリティ対策の設計
-      label: 対策
+      expr: inbound.derived_from
+      label: 対策（実現する機能・構成）
   where:
     fields.nfr_category:
     - security

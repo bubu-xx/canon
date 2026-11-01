@@ -53,10 +53,10 @@ sheets:
       expr: config.scope
       label: 対象範囲
     B7:
-      expr: gap=試験環境
+      expr: prj.test_environment
       label: 試験環境
     B8:
-      expr: gap=スタブ・ドライバ
+      expr: prj.test_stubs
       label: スタブ・ドライバ
     B9:
       expr: =すべての試験項目で期待結果と実施結果が一致すること

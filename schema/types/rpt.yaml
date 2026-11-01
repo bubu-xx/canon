@@ -1,0 +1,33 @@
+# 帳票（RPT）：印刷・出力する帳票やファイル。
+type: rpt
+id_prefix: RPT
+version: 0
+label: 帳票
+fields:
+  purpose:
+    label: "目的"
+    type: text
+    required: true
+    blocking: true
+    description: "誰が何のために使う帳票か"
+  trigger:
+    label: "出力契機"
+    type: text
+    required: true
+    blocking: true
+    description: "いつ・何をきっかけに出力するか"
+  format:
+    label: "出力先・形式"
+    type: text
+    required: true
+    blocking: true
+    description: "出力先（プリンター、ファイル、画面）と形式（PDF、CSV など）"
+  items:
+    label: "出力項目"
+    type: list
+    required: true
+    blocking: true
+    description: "出力する項目と、その編集・並び順"
+links:
+  required:
+    derived_from: { min: 1, target_types: [req] }

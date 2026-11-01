@@ -13,8 +13,15 @@ types:
       preconditions: { required: false, blocking: false }
       state_changes: { required: false, blocking: false }
       authorization: { required: false, blocking: false }
+      postconditions: { required: false, blocking: false }
   tst:
     fields:
       level:          { required: false, blocking: false }
       preconditions:  { required: false, blocking: false }
       executable_ref: { required: true, blocking: false }
+      viewpoint:      { required: true, blocking: false }
+  prj:
+    fields:
+      business_flow_as_is: { required: false, blocking: false }
+      business_flow_to_be: { required: false, blocking: false }
+      business_issues:     { required: false, blocking: false }

@@ -73,10 +73,18 @@ func Run(p *project.Project, opt Options) []Issue {
 			c.add("error", "unreadable", fe.File, "", "", fe.Err.Error(), "YAML の書式を直してください")
 		}
 	}
+	count := map[string][]string{}
 	for _, id := range p.Order {
 		e := p.Elements[id]
+		count[e.Type] = append(count[e.Type], e.ID)
 		if c.in(e.ID) {
 			c.element(e)
+		}
+	}
+	for _, t := range p.Schema.TypeOrder {
+		td := p.Schema.Types[t]
+		if td.MaxElements > 0 && len(count[t]) > td.MaxElements && len(opt.Only) == 0 {
+			c.add("error", "too_many", "", strings.Join(count[t], ", "), "", fmt.Sprintf("型 %s の要素は %d 件までです（%d 件あります）", or(td.Label, t), td.MaxElements, len(count[t])), "1つの要素にまとめてください")
 		}
 	}
 	qids := make([]string, 0, len(p.Questions))
@@ -154,7 +162,7 @@ func (c *checker) element(e *model.Element) {
 	}
 	for _, name := range td.FieldOrder {
 		def := td.Fields[name]
-		if def.Required {
+		if def.Required || requiredWhen(e, def) {
 			if _, ok := e.Fields[name]; !ok {
 				c.add("error", "missing_field", f, e.ID, name, fmt.Sprintf("必須項目「%s」がありません", def.Label),
 					"根拠のある値が無ければ status: unknown として置き、質問を起票してください（空白を隠さない）")
@@ -494,4 +502,27 @@ func contains(xs []string, s string) bool {
 		}
 	}
 	return false
+}
+
+// requiredWhen は条件付きの必須が成り立つか。条件の項目が確定していなければ成り立たない（未確定のまま必須にしない）。
+func requiredWhen(e *model.Element, def *schema.FieldDef) bool {
+	for k, vals := range def.RequiredWhen {
+		fl := e.Fields[k]
+		if fl == nil || fl.Status != model.StatusConfirmed {
+			continue
+		}
+		for _, v := range vals {
+			if fmt.Sprint(fl.Value) == v {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func or(a, b string) string {
+	if a == "" {
+		return b
+	}
+	return a
 }

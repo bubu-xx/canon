@@ -82,6 +82,16 @@ name: x
 fields:
   statement: { status: not_applicable }
 `, "no_source"},
+		"条件付きの必須（非機能の分類）": {`id: REQ-009
+type: req
+name: x
+fields:
+  statement: { value: "x", status: confirmed, source: { kind: document, ref: "要件定義書 v1.3 §4" } }
+  kind: { value: non_functional, status: confirmed, source: { kind: document, ref: "要件定義書 v1.3 §4" } }
+  acceptance_criteria: { value: ["x"], status: confirmed, source: { kind: document, ref: "要件定義書 v1.3 §4" } }
+  rationale: { status: unknown, question: Q-001 }
+  priority: { value: must, status: confirmed, source: { kind: document, ref: "要件定義書 v1.3 §4" } }
+`, "missing_field"},
 		"必須項目の欠落": {`id: REQ-009
 type: req
 name: x
@@ -110,6 +120,26 @@ fields: {}
 			t.Fatalf("%s が検出されない（検出: %s）", tc.code, strings.Join(got, ","))
 		})
 	}
+}
+
+func TestOneProject(t *testing.T) {
+	root := fixture(t)
+	dir := filepath.Join(root, ".canon", "canon", "prj")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range []string{"PRJ-001", "PRJ-002"} {
+		doc := "id: " + id + "\ntype: prj\nname: x\nfields: {}\n"
+		if err := os.WriteFile(filepath.Join(dir, id+".yaml"), []byte(doc), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, i := range check.Run(load(t, root), check.Options{}) {
+		if i.Code == "too_many" {
+			return
+		}
+	}
+	t.Fatal("プロジェクト（PRJ）が2件あっても too_many が出ない")
 }
 
 func copyDir(t *testing.T, src, dst string) {

@@ -339,6 +339,17 @@ func (c *tctx) eval(e *model.Element, expr string) (string, string) {
 			return fmt.Sprintf("%d 件（うち着手条件 %d 件）", s.OpenQuestions, s.BlockingGaps), ""
 		}
 	}
+	if strings.HasPrefix(expr, "prj.") {
+		// プロジェクト全体の情報（PRJ の1件）の項目
+		pe := c.project()
+		if c.p.Schema.Types["prj"] == nil {
+			return "（Canon に「プロジェクト」の型がありません）", "gap"
+		}
+		if pe == nil {
+			return "（Canon にプロジェクト全体の情報（PRJ）がありません）", "gap"
+		}
+		return c.eval(pe, "fields."+strings.TrimPrefix(expr, "prj."))
+	}
 	if e == nil {
 		return "（不明な式: " + expr + "）", "gap"
 	}
@@ -399,6 +410,14 @@ func (c *tctx) exprState(typ, expr string) string {
 		return "no_place"
 	case expr == "config.scope" && len(c.p.Config.Scope) == 0:
 		return "no_elements"
+	case strings.HasPrefix(expr, "prj."):
+		if c.p.Schema.Types["prj"] == nil {
+			return "no_type"
+		}
+		if c.project() == nil {
+			return "no_elements"
+		}
+		return c.exprState("prj", "fields."+strings.TrimPrefix(expr, "prj."))
 	}
 	if typ != "" {
 		td := c.p.Schema.Types[typ]
@@ -413,6 +432,16 @@ func (c *tctx) exprState(typ, expr string) string {
 		}
 	}
 	return "ok"
+}
+
+// project はプロジェクト全体の情報（型 prj の最初の要素）。
+func (c *tctx) project() *model.Element {
+	for _, id := range c.p.Order {
+		if e := c.p.Elements[id]; e.Type == "prj" {
+			return e
+		}
+	}
+	return nil
 }
 
 func (c *tctx) typeState(typ string) string {

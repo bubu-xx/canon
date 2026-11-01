@@ -39,6 +39,9 @@ fields:
       - value: ["該当なしの場合はエラー E-404 を返す"]
         source: { kind: code, ref: "src/order/search.go:56" }
     question: Q-002
+  postconditions:
+    status: unknown
+    question: Q-003
   state_changes:
     value: []
     status: confirmed

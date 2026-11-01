@@ -83,6 +83,25 @@ canon render --format xlsx --template 様式.xlsx --map 様式.map.yaml   # 会�
 - 未確定は黄、矛盾は橙、該当なしは灰でセルを塗り、質問 ID を示す。確定値の出典はセルのコメント（標準様式）
 - 対応表の書き方は `evals/templates/処理仕様書_様式.map.yaml` を参照
 
+## 型（Canon に置く情報の種類）
+設計書6種（要件定義・基本設計・詳細設計・単体／結合／総合試験）の欄は、すべてどれかの型の項目に対応している。設計書の欄が埋まらないのは、Canon にその情報が無い（情報源から読み取れていない）ということ。
+
+| 型 | ID | 内容 |
+|---|---|---|
+| prj | PRJ | プロジェクト全体（目的・概要・対象外・前提・関係者・業務の流れ・試験環境）。1件だけ |
+| req | REQ | 要求（機能・非機能・制約。非機能は IPA 非機能要求グレードの分類も） |
+| scr | SCR | 画面 |
+| rpt | RPT | 帳票 |
+| ifc | IF | 外部インタフェース |
+| dat | DAT | データ（論理・物理） |
+| bhv | BHV | 振る舞い（処理） |
+| cmp | CMP | 構成要素（方式設計・モジュール設計） |
+| adr | ADR | 設計判断 |
+| term | TRM | 用語 |
+| tst | TST | 試験（単体・結合・総合。観点区分・試験種別・受け渡すデータも） |
+
+項目の中には条件付きで必須のものがある（`required_when`。例：非機能要求のときだけ分類が必須）。
+
 ## プロジェクトの種類（プロファイル）
 `.canon/config.yaml` の `profile` で、スキーマの必須項目を切り替える。`business`（業務システム）／`library`（ライブラリ・デスクトップアプリ）。定義は `schema/profiles/`。
 
@@ -92,6 +111,7 @@ canon render --format xlsx --template 様式.xlsx --map 様式.map.yaml   # 会�
 - unknown に値を書けない。conflict に値を書けない（主張は claims に残す）。状態は confirmed / unknown / conflict の3つだけ
 - unknown / conflict には質問が必須。スキーマの必須項目は値が無くても unknown として置く
 - リンクにも出典が必須。既存の情報源は書き換えられない
+- 照合（verify）で矛盾・未実装とした文は、Canon のどの項目の話かを `affects` で示し、その項目は conflict（未実装は unknown も可）で同じ質問につながっていなければならない
 
 ## 開発
 ```

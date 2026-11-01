@@ -38,6 +38,9 @@ type Statement struct {
 	Question   string   `yaml:"question" json:"question"`
 	Review     string   `yaml:"review" json:"review"`           // 一致・記述不足に対する別のエージェントの反例探し：kept / changed
 	ReviewNote string   `yaml:"review_note" json:"review_note"` // changed のとき、見つけた反例（入力・状態とコードの位置）
+	// Affects は、この文の矛盾・未実装が Canon のどの項目の話か（"BHV-003.error_cases" の形）。
+	// 矛盾・未実装には必須。その項目は Canon で conflict（未実装は unknown も可）になり、同じ質問につながる
+	Affects []string `yaml:"affects" json:"affects"`
 }
 
 // Entry は1つのアンカーの照合結果。
@@ -69,8 +72,16 @@ type Report struct {
 	Reviewed   int            `json:"reviewed"`
 	Changed    int            `json:"changed"`
 	Findings   []Finding      `json:"findings"` // 不一致・未実装（人が判断する）
+	Linked     int            `json:"linked"`   // 矛盾・未実装のうち Canon に反映済み
+	Stale      []Stale        `json:"stale"`    // 照合で矛盾が出た箇所を出典にしている確定値（見直し候補）
 	Gaps       []Finding      `json:"gaps"`     // 記述不足（コードと矛盾はしないが、記述に無い条件・例外がある）
 	Issues     []Issue        `json:"issues"`
+}
+
+// Stale は、照合で矛盾・未実装が出た箇所を出典にしているのに、どの文の affects にも挙がっていない Canon の確定値。
+type Stale struct {
+	Anchor string `json:"anchor"`
+	Field  string `json:"field"`
 }
 
 // Finding は人に回す食い違い。
@@ -97,6 +108,8 @@ func Check(p *project.Project) (*Report, error) {
 		return nil, err
 	}
 	units := Units(p.SourcesDir())
+	affected := map[string]bool{}   // affects に挙がっている項目（ID.項目）
+	badAnchors := map[string]bool{} // 矛盾・未実装が出たアンカー
 	byAnchor := map[string]*Entry{}
 	for i := range f.Entries {
 		e := &f.Entries[i]
@@ -210,6 +223,17 @@ func Check(p *project.Project) (*Report, error) {
 				if strings.TrimSpace(s.Note) == "" {
 					r.Issues = append(r.Issues, Issue{where, "何が違うのかを note に書いてください"})
 				}
+				if msgs := checkAffects(p, s); len(msgs) > 0 {
+					for _, m := range msgs {
+						r.Issues = append(r.Issues, Issue{where, m})
+					}
+				} else {
+					r.Linked++
+				}
+				for _, ref := range s.Affects {
+					affected[ref] = true
+				}
+				badAnchors[a] = true
 			case "incomplete":
 				r.Gaps = append(r.Gaps, Finding{a, s.Text, s.Verdict, s.Note, s.Question})
 				if strings.TrimSpace(s.Note) == "" {
@@ -222,7 +246,72 @@ func Check(p *project.Project) (*Report, error) {
 			}
 		}
 	}
+	r.Stale = stale(p, badAnchors, affected)
 	return r, nil
+}
+
+// checkAffects は矛盾・未実装の文が Canon に反映されているかを確かめる。
+func checkAffects(p *project.Project, s Statement) []string {
+	if len(s.Affects) == 0 {
+		return []string{"affects（この食い違いが Canon のどの項目の話か、'BHV-003.error_cases' の形）が必要です。当てはまる要素が無ければ、要素を作ってから挙げてください（情報源の内容は Canon のどこかに入る）"}
+	}
+	var out []string
+	for _, ref := range s.Affects {
+		id, field, ok := strings.Cut(ref, ".")
+		e := p.Elements[id]
+		if !ok || e == nil {
+			out = append(out, "affects の "+ref+" の要素が Canon にありません")
+			continue
+		}
+		fl := e.Fields[field]
+		if fl == nil {
+			out = append(out, "affects の "+ref+" の項目が要素にありません（必要なら unknown か conflict として置く）")
+			continue
+		}
+		switch {
+		case fl.Status == model.StatusConfirmed && fl.Source != nil && fl.Source.Kind == "answer":
+			// 人が回答して確定した。照合の質問への回答であること
+			if s.Question != "" && fl.Source.Question != s.Question {
+				out = append(out, fmt.Sprintf("%s は回答（%s）で確定していますが、この食い違いの質問は %s です", ref, fl.Source.Question, s.Question))
+			}
+		case fl.Status == model.StatusConflict, fl.Status == model.StatusUnknown && s.Verdict == "not_implemented":
+			if s.Question != "" && fl.Question != s.Question {
+				out = append(out, fmt.Sprintf("%s の質問（%s）と、この食い違いの質問（%s）が違います。同じ判断なら同じ質問にしてください", ref, or(fl.Question, "なし"), s.Question))
+			}
+		default:
+			want := "conflict"
+			if s.Verdict == "not_implemented" {
+				want = "conflict か unknown"
+			}
+			out = append(out, fmt.Sprintf("%s は %s ですが、照合で食い違いが出ています。%s にして記述とコードの主張を claims に残してください（人が回答したら answer を出典に確定する）", ref, or(fl.Status, "状態なし"), want))
+		}
+	}
+	return out
+}
+
+// stale は、矛盾・未実装の出たアンカーを出典（source / also）にしている確定値のうち、affects に挙がっていないもの。
+func stale(p *project.Project, bad, affected map[string]bool) []Stale {
+	var out []Stale
+	for _, id := range p.Order {
+		e := p.Elements[id]
+		for _, name := range e.FieldOrder {
+			fl := e.Fields[name]
+			if fl == nil || fl.Status != model.StatusConfirmed {
+				continue
+			}
+			srcs := append([]*model.Source{fl.Source}, fl.Also...)
+			for _, src := range srcs {
+				if src == nil || src.Kind != "document" {
+					continue
+				}
+				a := model.NormalizeRef(src.Ref)
+				if bad[a] && !affected[id+"."+name] {
+					out = append(out, Stale{a, id + "." + name})
+				}
+			}
+		}
+	}
+	return out
 }
 
 func checkCode(root, ref string, cache map[string]int) string {
@@ -288,6 +377,15 @@ func (r *Report) Text() string {
 		b.WriteString("\n■ 矛盾・未実装（人の判断が要る。どちらが正しいかで、実装の修正か設計書の修正かが決まる）\n")
 		for _, f := range r.Findings {
 			fmt.Fprintf(&b, "  [%s] %s「%s」→ %s\n      %s\n", f.Verdict, f.Anchor, short(f.Text), or(f.Question, "質問なし"), f.Note)
+		}
+	}
+	if n := len(r.Findings); n > 0 {
+		fmt.Fprintf(&b, "\nCanon への反映: 矛盾・未実装 %d 件のうち %d 件\n", n, r.Linked)
+	}
+	if len(r.Stale) > 0 {
+		b.WriteString("\n■ 見直し候補（照合で食い違いが出た箇所を出典にしている確定値。食い違いと関係があれば affects に挙げて conflict にする。関係なければそのまま）\n")
+		for _, st := range r.Stale {
+			fmt.Fprintf(&b, "  %s ← %s\n", st.Field, st.Anchor)
 		}
 	}
 	if len(r.Gaps) > 0 {

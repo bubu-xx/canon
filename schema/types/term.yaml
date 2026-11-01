@@ -1,0 +1,20 @@
+# 用語（TRM）：プロジェクトで使う言葉の定義。同じ言葉を同じ意味で使うための拠り所。
+type: term
+id_prefix: TRM
+version: 0
+label: 用語
+fields:
+  definition:
+    label: "定義"
+    type: text
+    required: true
+    blocking: false
+    description: "この言葉が何を指すか"
+  aliases:
+    label: "別名・略称"
+    type: list
+    required: false
+    blocking: false
+    description: "同じものを指す別の言い方（英語名、略称、コード上の名前）"
+links:
+  required: {}

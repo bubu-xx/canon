@@ -10,6 +10,12 @@ fields:
     value: system
     status: confirmed
     source: { kind: document, ref: "試験仕様書 v1.0 §3" }
+  viewpoint:
+    status: unknown
+    question: Q-004
+  test_type:
+    status: unknown
+    question: Q-004
   preconditions:
     value: ["13か月前と11か月前の注文を持つ会員でログイン済み"]
     status: confirmed

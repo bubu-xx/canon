@@ -1,0 +1,77 @@
+# プロジェクト（PRJ）：プロジェクト全体に1つだけある情報。目的・対象外・前提・体制・業務の流れ・試験環境など、
+# 個々の要求や振る舞いに属さないが、設計書の冒頭や試験の概要に要る情報の置き場。
+# 要素は PRJ-001 の1件だけ。情報源に書かれていなければ unknown として置き、質問にする。
+type: prj
+id_prefix: PRJ
+version: 0
+label: プロジェクト
+max_elements: 1
+fields:
+  purpose:
+    label: "目的・背景"
+    type: text
+    required: true
+    blocking: false
+    description: "なぜこのシステム・プロジェクトがあるのか。判断に迷ったときの拠り所"
+  system_overview:
+    label: "システムの概要"
+    type: text
+    required: true
+    blocking: false
+    description: "システム全体が何をするものか（構成要素や機能の一覧ではなく、全体像の説明）"
+  out_of_scope:
+    label: "対象外事項"
+    type: list
+    required: true
+    blocking: false
+    description: "このプロジェクトで扱わないこと。対象範囲（config.scope）と対になる"
+  assumptions:
+    label: "前提条件"
+    type: list
+    required: true
+    blocking: false
+    description: "プロジェクト全体の前提（利用環境、既存システム、体制上の前提など）"
+  stakeholders:
+    label: "関係者と役割"
+    type: list
+    required: true
+    blocking: false
+    description: "関係者（利用者・発注者・開発・運用など）と、それぞれの役割・判断の権限"
+  business_flow_as_is:
+    label: "現行業務フロー"
+    type: list
+    required: true
+    blocking: false
+    description: "システム導入前の業務の流れ"
+  business_flow_to_be:
+    label: "新業務フロー"
+    type: list
+    required: true
+    blocking: false
+    description: "システム導入後の業務の流れ"
+  business_issues:
+    label: "業務上の課題と解決方針"
+    type: list
+    required: true
+    blocking: false
+    description: "現行業務の課題と、システムでどう解決するか"
+  test_environment:
+    label: "試験環境"
+    type: list
+    required: true
+    blocking: false
+    description: "試験を行う環境（OS、機器、データ、本番との違い）"
+  test_stubs:
+    label: "スタブ・ドライバ"
+    type: list
+    required: false
+    blocking: false
+    description: "単体・結合試験で使うスタブ・ドライバ・モック"
+  integration_order:
+    label: "結合の進め方"
+    type: text
+    required: false
+    blocking: false
+    description: "結合試験の順序（トップダウン・ボトムアップなど）"
+links:
+  required: {}

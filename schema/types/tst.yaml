@@ -35,6 +35,28 @@ fields:
     required: true
     blocking: true
     description: "期待される結果。曖昧な表現（『正しく動く』等）は不可"
+  viewpoint:
+    label: "観点区分"
+    type: enum
+    values: [normal, abnormal, boundary]
+    required: true
+    blocking: false
+    description: "正常系／異常系／境界値"
+  test_type:
+    label: "試験種別"
+    type: enum
+    values: [function, performance, security, reliability, usability, compatibility, operational]
+    required: false
+    required_when: { level: [system, acceptance] }
+    blocking: false
+    description: "総合・受入試験のとき、何の性質を確かめる試験か（機能・性能・セキュリティ・信頼性・使用性・互換性・運用）"
+  interface_data:
+    label: "受け渡すデータ"
+    type: list
+    required: false
+    required_when: { level: [integration] }
+    blocking: false
+    description: "結合試験のとき、部品の間で受け渡すデータ"
   test_data:
     label: "試験データ"
     type: list

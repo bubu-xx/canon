@@ -20,6 +20,14 @@ id_prefix:
   req: REQ
   bhv: BHV
   tst: TST
+  prj: PRJ
+  scr: SCR
+  rpt: RPT
+  ifc: IF
+  dat: DAT
+  term: TRM
+  cmp: CMP
+  adr: ADR
   question: Q
 
 # --- フィールド（Field）の共通の形 ----------------------------------------
@@ -92,6 +100,8 @@ field_definition:
     units:       { description: "許される単位の一覧（任意）" }
     required:    { description: "true なら要素に必ず存在する（値が無くても unknown として存在する）" }
     blocking:    { description: "true なら着手条件（必須）。unknown / conflict のままだと AI はこの要素の実装・修正に着手しない。false は注意" }
+    required_when: { description: "他の項目が確定していて、その値がこの中にあるときだけ必須（例：{ kind: [non_functional] }）。条件の項目が未確定なら必須にしない" }
+    max_elements: { description: "（型の直下）その型の要素の数の上限。プロジェクト（prj）は 1" }
 
 # --- プロファイル（profiles/*.yaml） --------------------------------------
 # プロジェクトの種類ごとに、型の項目の required / blocking を上書きする。

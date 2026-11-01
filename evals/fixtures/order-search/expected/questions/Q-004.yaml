@@ -1,0 +1,8 @@
+id: Q-004
+type: question
+asks_for: [TST-001.viewpoint, TST-001.test_type]
+blocking: false
+to: "試験担当"
+context: "試験仕様書 v1.0 §3.1 は観点区分（正常・異常・境界）と試験種別（機能・性能など）を書いていない。目的は「12か月より前の注文が含まれないこと」、前提は13か月前と11か月前の注文"
+options: ["観点：境界値、種別：機能", "観点：正常系、種別：機能"]
+status: open

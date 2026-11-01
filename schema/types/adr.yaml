@@ -1,0 +1,26 @@
+# 設計判断（ADR）：なぜその設計にしたか。後から変えるかどうかを判断する拠り所。
+type: adr
+id_prefix: ADR
+version: 0
+label: 設計判断
+fields:
+  decision:
+    label: "決定内容"
+    type: text
+    required: true
+    blocking: true
+    description: "何を決めたか"
+  rationale:
+    label: "理由"
+    type: text
+    required: true
+    blocking: true
+    description: "なぜそう決めたか"
+  alternatives:
+    label: "却下した案"
+    type: list
+    required: false
+    blocking: false
+    description: "検討して採らなかった案と、採らなかった理由"
+links:
+  required: {}

@@ -47,19 +47,19 @@ sheets:
       expr: project
       label: システム名
     B5:
-      expr: gap=プロジェクトの目的・背景
+      expr: prj.purpose
       label: 目的・背景
     B6:
       expr: config.scope
       label: 対象範囲
     B7:
-      expr: gap=対象外事項
+      expr: prj.out_of_scope
       label: 対象外事項
     B8:
-      expr: gap=プロジェクトの前提条件
+      expr: prj.assumptions
       label: 前提条件
     B9:
-      expr: gap=関係者と役割
+      expr: prj.stakeholders
       label: 関係者・体制
 - template: 2.業務要件
   cells:
@@ -67,13 +67,13 @@ sheets:
       expr: project
       label: システム名
     B5:
-      expr: gap=業務フロー
+      expr: prj.business_flow_as_is
       label: 現行業務フロー（As-Is）
     B6:
-      expr: gap=業務フロー
+      expr: prj.business_flow_to_be
       label: 新業務フロー（To-Be）
     B7:
-      expr: gap=業務課題
+      expr: prj.business_issues
       label: 業務上の課題と解決方針
 - template: 3.1 機能要件
   cells:

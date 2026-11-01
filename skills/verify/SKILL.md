@@ -51,8 +51,9 @@ entries:
         scope: in
         code: ["libs/crates/interchange/src/lib.rs:199-222"]
         verdict: inconsistent
-        note: "コードは固定名 composite/full.png を読み、manifest.json の rendition を参照しない"
+                note: "コードは固定名 composite/full.png を読み、manifest.json の rendition を参照しない"
         question: Q-010
+        affects: ["DAT-002.attributes"]
       - unit: 3
         source: "`.pcraft` (atelier Photo, zip or folder bundle) › Written by: `atelier_photo_io::interchange::rendition_png`, on every `.pcraft` save from the app, CLI, MCP and engine"
         text: ".pcraft の合成画像は atelier_photo_io::interchange::rendition_png が保存時に書く"
@@ -63,12 +64,17 @@ entries:
 ## 手順
 1. `canon verify --init` で雛形を作る（既にあれば作り直さず続きを埋める）
 2. 区切りごとに、対象範囲のコードを grep・Read で探して判定する。複数の主張があれば text で分ける
-3. inconsistent / not_implemented は、`canon next-id question` で質問を起票する（ask スキルの書式。context に記述とコードの位置、options に「設計書どおりに実装を直す」「実装どおりに設計書を直す」）。関係する Canon の項目があれば conflict にする
+3. inconsistent / not_implemented は、`canon next-id question` で質問を起票し（ask スキルの書式。context に記述とコードの位置、options に「設計書どおりに実装を直す」「実装どおりに設計書を直す」）、**Canon に反映する**：
+   - その食い違いが Canon のどの項目の話かを `affects` に書く（`BHV-003.error_cases` の形。複数可）
+   - その項目を `status: conflict` にし、claims に記述の主張（`kind: document`、アンカー）とコードの主張（`kind: code`、パス:行）を残し、question に同じ質問を書く。それまでの確定値はどちらかの claim になる。未実装は、コードの主張が無いので unknown でもよい
+   - 当てはまる要素・項目が Canon に無ければ、ingest の規則で要素を作ってから挙げる（情報源の内容は Canon のどこかに入る）
+      - 1つの項目の質問は1つ（`canon verify` が確かめる）。同じ項目に複数の食い違いがあれば、同じ質問の context にすべて書く。1つの答えで決まらないほど別の話なら、要素や項目の分け方が粗い（ingest の単位を見直す）
+   - 人が回答したら（ask スキル）、項目は回答（`kind: answer`、その質問）を出典に confirmed になる。照合の記録はそのまま残す
 4. **反例探し**：consistent と incomplete の**すべての文**を、照合をしていない別のエージェント（Agent ツールで refuter エージェントを新しく起動する。文書ごと、または10〜20文ずつに分けて並行で起動してよい）に渡す。渡すのは anchor・unit・text・verdict・code だけで、note やこれまでの判断は渡さない。返ってきた結果を記録する：
    - kept → `review: kept`
    - changed → `review: changed`、`review_note` に反例、verdict を返ってきた判定に変える（note も反例に合わせて直す）。inconsistent に変えたものは質問を起票する
    - 返ってきた反例は、自分でもコードの行を読んで確かめる。行で示せないものは採らない（そのときは kept とし、理由を review_note に書く）
-5. `canon verify` を実行し、記録の不備が 0 になるまで直す
+5. `canon verify` と `canon validate` を実行し、どちらもエラーが 0 になるまで直す。`canon verify` の「見直し候補」（食い違いが出た箇所を出典にしている確定値）は、食い違いと関係があれば affects に挙げて conflict にし、関係なければそのままにする
 6. 利用者に報告する：照合した箇所・区切り・文の数、判定の内訳、反例探しで変わった件数、矛盾・未実装の一覧（人の判断が要る）、記述不足の一覧（設計書の追記候補）
 
 別の回の照合（同じ情報源で作ったもの）と比べるときは `canon verify --compare <もう一方の verify.yaml>`。区切りごとに判定を突き合わせ、矛盾・未実装の和集合を出す。

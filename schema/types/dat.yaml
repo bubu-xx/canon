@@ -1,0 +1,57 @@
+# データ（DAT）：保存・受け渡しするデータの単位（エンティティ、テーブル、ファイル形式の中身）。
+# 論理（基本設計）と物理（詳細設計）の両方の項目を持つ。情報源にある方だけ埋める。
+type: dat
+id_prefix: DAT
+version: 0
+label: データ
+fields:
+  summary:
+    label: "概要"
+    type: text
+    required: true
+    blocking: true
+    description: "何を表すデータか"
+  attributes:
+    label: "属性・項目定義"
+    type: list
+    required: true
+    blocking: true
+    description: "項目と、その型・桁・必須・キー"
+  physical_name:
+    label: "物理名"
+    type: string
+    required: false
+    blocking: false
+    description: "テーブル名・ファイル名・構造体名など"
+  indexes:
+    label: "インデックス・制約"
+    type: list
+    required: false
+    blocking: false
+    description: "インデックス、一意制約、外部キー、値の範囲"
+  volume:
+    label: "件数見込み"
+    type: text
+    required: false
+    blocking: false
+    description: "件数・大きさの見込み"
+  frequency:
+    label: "更新頻度"
+    type: text
+    required: false
+    blocking: false
+    description: "どのくらいの頻度で作られ・更新されるか"
+  retention:
+    label: "保存期間"
+    type: text
+    required: false
+    blocking: false
+    description: "いつまで残すか"
+  migration:
+    label: "移行要否"
+    type: text
+    required: false
+    blocking: false
+    description: "既存データからの移行が要るか、旧形式を読む必要があるか"
+links:
+  required: {}
